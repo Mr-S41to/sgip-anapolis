@@ -5,4 +5,5 @@
     - Java 21
 
 ## Dependências:
-    - Tabular: `pip install tabula-py`
+    - Tabular: 
+    `pip install tabula-py`
