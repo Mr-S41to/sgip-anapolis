@@ -5,8 +5,8 @@
 - Java JDK 13
 
 ## 💻 Dependências:
-Tabular: 
-`pip install tabula-py`
+Tabular: `pip install tabula-py`
+
 Documentação: [Ler Mais](https://pypi.org/project/tabula-py/)
 
 ## ▶ Run:
