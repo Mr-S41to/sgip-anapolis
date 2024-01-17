@@ -1,23 +1,11 @@
 import tabula
 import pandas as pd
-import os
 
 # Define o nome do arquivo PDF
-file_name = "data.pdf"
-
-# Obtém o diretório do script
-script_directory = os.path.dirname(os.path.abspath(__file__))
-
-# Define o caminho completo do arquivo PDF
-file_path = os.path.join(script_directory, file_name)
-
-# Verifica se o arquivo PDF existe
-if not os.path.exists(file_path):
-    print(f"Erro: O arquivo PDF '{file_name}' não foi encontrado no diretório '{script_directory}'.")
-    exit()
+file = "C:/Users/mathe/OneDrive/Área de Trabalho/Git/sgip-anapolis/prototipos/DataInput/sample.pdf"
 
 # Extrair tabelas do PDF
-tabelas = tabula.read_pdf(file_path, pages='all', multiple_tables=True, stream=True, guess=False)
+tabelas = tabula.read_pdf(file, pages='all', multiple_tables=True, stream=True, guess=False)
 
 # Inicializar um DataFrame vazio
 df_final = pd.DataFrame()
@@ -27,9 +15,9 @@ for tabela in tabelas:
     df_final = pd.concat([df_final, tabela], ignore_index=True)
 
 # Define o caminho completo do arquivo Excel
-excel_path = os.path.join(script_directory, "resultados.xlsx")
+excel = "resultados.xlsx"
 
 # Salvar o DataFrame em um arquivo Excel
-df_final.to_excel(excel_path, index=False)
+df_final.to_excel(excel, index=False)
 
-print(f'Conversão concluída. Dados salvos em {excel_path}')
+print(f'Conversão concluída. Dados salvos em {excel}')
