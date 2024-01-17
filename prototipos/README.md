@@ -6,4 +6,5 @@
 
 ## Dependências:
     - Tabular: 
-    `pip install tabula-py`
+    
+    ```pip install tabula-py```
