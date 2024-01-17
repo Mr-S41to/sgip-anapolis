@@ -7,7 +7,7 @@
 ## 💻 Dependências:
 Tabular: 
 `pip install tabula-py`
-    Documentação: [Ler Mais](https://pypi.org/project/tabula-py/)
+Documentação: [Ler Mais](https://pypi.org/project/tabula-py/)
 
 ## ▶ Run:
 `python nome-do-arquivo.py`
