@@ -35,4 +35,4 @@ with open("sample.pdf", 'rb') as file_pdf:
 
 # Exibir os endereços extraídos.
 for i, inscricao in enumerate(inscricoes, start=1):
-    print(f"Inscricao {i}: {inscricao}")
+    print(f"Inscrição {i}: {inscricao}")
