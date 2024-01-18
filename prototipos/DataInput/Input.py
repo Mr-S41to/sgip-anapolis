@@ -2,7 +2,7 @@ import tabula
 import pandas as pd
 
 # Define o nome do arquivo PDF
-file = "C:/Users/mathe/OneDrive/Área de Trabalho/Git/sgip-anapolis/prototipos/DataInput/sample.pdf"
+file = "sample.pdf"
 
 # Extrair tabelas do PDF
 tabelas = tabula.read_pdf(file, pages='all', multiple_tables=True, stream=True, guess=False)
