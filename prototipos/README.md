@@ -12,6 +12,12 @@ Documentação: [Ler Mais](https://pypi.org/project/tabula-py/)
 
 
 
+PyPDF2: `pip install PyPDF2`
+
+Documentação: [Ler Mais](https://pypi.org/project/PyPDF2/)
+
+
+
 Pandas: `pip install pandas`
 
 Documentação: [Ler Mais](https://pandas.pydata.org/)
