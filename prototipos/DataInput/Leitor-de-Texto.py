@@ -14,7 +14,7 @@ with open("sample.pdf", 'rb') as file_pdf:
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+).*Inscrição:')
     padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
     #Exemplo de padão de numero de Matrícula: 404.004.0116.000 
-    # padrao_origem = re.compile(r'Origem:\s*([\d.]+).*?Inscrição:')
+    padrao_endereco = re.compile(r'Endereço: \s*(.+)(?=\s*Matrícula:)')
 
     # Os endereços extraídos serão armazenados nesta lista.
     imoveis = []
@@ -31,14 +31,21 @@ with open("sample.pdf", 'rb') as file_pdf:
         correspondencia_origem = padrao_origem.findall(text, re.DOTALL)
         correspondencia_inscricao = padrao_inscricao.findall(text, re.DOTALL)
         correspondencia_matricula = padrao_matricula.findall(text, re.DOTALL)
+        correspondência_endereco = padrao_endereco.findall(text, re.DOTALL)
 
         # Processar cada correspondência.
-        for origem, inscricao, matricula in zip(correspondencia_origem, correspondencia_inscricao, correspondencia_matricula):
+        for origem, inscricao, matricula, endereco in zip(
+            correspondencia_origem, 
+            correspondencia_inscricao, 
+            correspondencia_matricula, 
+            correspondência_endereco
+        ):
             #Operador zip para combinar os valores das duas expressões regulares em uma única tupla. 
             origem = origem.strip()
             inscricao = inscricao.strip()
             matricula = matricula.strip()
-            imoveis.append((origem, inscricao, matricula))
+            endereco = endereco[:-16].strip()
+            imoveis.append((origem, inscricao, matricula, endereco))
 
             # # Utilizar tabula para extrair tabelas da página
             # tabelas = tabula.read_pdf("sample.pdf", pages=num_pagina + 1, multiple_tables=True)
@@ -50,5 +57,5 @@ with open("sample.pdf", 'rb') as file_pdf:
             #     print(tabela)
 
 # Exibir os endereços extraídos.
-for i, (origem, inscricao, matricula) in enumerate(imoveis,  start=1):
-    print(f"{i} Origem: {origem} Inscrição: {inscricao} Matrícula: {matricula}")
+for i, (origem, inscricao, matricula, endereco) in enumerate(imoveis,  start=1):
+    print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco}")
