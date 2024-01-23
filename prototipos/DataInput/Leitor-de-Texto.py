@@ -1,6 +1,9 @@
 from PyPDF2 import PdfReader
 import re
 import tabula
+import pandas as pd
+
+print(pd.__version__)
 
 # Abrir o arquivo PDF em binário.
 with open("sample.pdf", 'rb') as file_pdf:
@@ -12,12 +15,12 @@ with open("sample.pdf", 'rb') as file_pdf:
     #Define um padrão para extrair as informações de endereço.
     padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
-    padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
+    padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:' or r'Endereço:\s*(.+?)\s*Matrícula:')
     padrao_endereco = re.compile(r'Endereço:\s*(.+?)\s*(?=\d{3}\.\d{3}\.\d{4}\.\d{3}\s*Matrícula:)')
     #Ajustado para excluir o nummero de matrícula.
     padrao_data = re.compile(r'Origem:(.*?)Endereço:', re.DOTALL)
 
-    # Os endereços extraídos serão armazenados nesta lista.
+    # Os objetos extraídos serão armazenados nesta lista.
     imoveis = []
 
     # Iterar pelas páginas do PDF.
@@ -27,7 +30,7 @@ with open("sample.pdf", 'rb') as file_pdf:
         #Extração do texto da página.
         text = pagina.extract_text()
 
-        # Impressão de texto para depuração
+        # Impressão de texto para depuração.
         print(f"Texto da página {num_pagina + 1}:\n{text}\n")
 
         # Encontrar todas as correspondências para o padrão de endereço em cada página.
@@ -36,19 +39,20 @@ with open("sample.pdf", 'rb') as file_pdf:
         correspondencia_matricula = padrao_matricula.findall(text)
         correspondencia_endereco = padrao_endereco.findall(text)
 
-        # Processar cada correspondência.
-        for origem, inscricao, matricula, endereco in zip(
+        # Processamento cada correspondência.
+        for origem, inscricao, endereco, matricula in zip(
             correspondencia_origem, 
             correspondencia_inscricao, 
-            correspondencia_matricula, 
-            correspondencia_endereco
+            correspondencia_endereco,
+            correspondencia_matricula
         ):
+            correspondencia_matricula = padrao_matricula.findall(text)
             origem = origem.strip()
             inscricao = inscricao.strip()
             matricula = matricula.strip()
             endereco = endereco.strip()
 
-            #Aplica a expressão regular para data
+            #Aplica a expressão regular para data.
             correspondencia_data = padrao_data.search(text)
 
             #Verifica se a correspondência foi encontrada.
@@ -59,14 +63,25 @@ with open("sample.pdf", 'rb') as file_pdf:
                 data = "Padrão não encontrado para esta entrada."
 
             imoveis.append((origem, inscricao, matricula, endereco, data))
-            
-#Salvar arquivo.
-data_miner = "Data Miner.txt"
-with open(data_miner, 'w') as miner:
-    for (origem, inscricao, matricula, endereco, data) in imoveis:
-        linha = f"{origem} {inscricao} {matricula} {endereco} {data}\n"
-        miner.write(linha)
-        
 # Exibir os resultados.
-for i, (origem, inscricao, matricula, endereco, data) in enumerate(imoveis,  start=1):
-    print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} Data: {data}\n")
+# for i, (origem, inscricao, matricula, endereco, data) in enumerate(imoveis,  start=1):
+    # print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} Data: {data}\n")
+       
+df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Data:"])
+
+# Exibir o DataFrame
+print(df)
+
+# Salvar o DataFrame como CSV
+df.to_csv("Relatório.csv", index=False)
+
+# Salvar o DataFrame como Excel
+excel = "Relatório.xlsx"
+df.to_excel(excel, index=False)
+  
+#Salvar arquivo .txt.
+# data_miner = "Data Miner.txt"
+# with open(data_miner, 'w') as miner:
+#     for (origem, inscricao, matricula, endereco, data) in imoveis:
+#         miner.write("Origem: {} Inscrição: {} Matrícula: {}\n Endereço{}\n Dados {}\n".format(origem, inscricao, matricula, endereco, data))
+print("Salvo com sucesso!")
