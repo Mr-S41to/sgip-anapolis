@@ -18,6 +18,7 @@ with open("sample.pdf", 'rb') as file_pdf:
     padrao_data = re.compile(r'Origem:(.*?)Endereço:', re.DOTALL)
     padrao_dividas = re.compile(r'Situação:\s*(.+?)\sANO' or r'Situação:\s*(.+?)\sTOTAL ORIGEM:', re.DOTALL)
     padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
+    padrao_linha = re.compile(r'(\d{4}) (\d{2}) ([A-Z]+ - [A-Z]+) (\d+,\d+) (\d+,\d+) (\d+,\d+) (\d+,\d+) (\d+) (\d+)')
 
     # The extracted objects will be stored in this list.
     imoveis = []
@@ -60,23 +61,32 @@ with open("sample.pdf", 'rb') as file_pdf:
                 data = "Padrão não encontrado para esta entrada."
             data = re.sub(r'\.(\s*\.)+', '', data)
             data = re.sub(r'ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER', '', data)
-            data = re.sub(r'\bTOTAL:\s*$', '', data, flags=re.MULTILINE)
+            data = re.sub(r'^.*TOTAL:$', '', data, flags=re.MULTILINE)
             data = re.sub(r'^TOTAL ORIGEM:.*$', '', data, flags=re.MULTILINE)
 
             dividas = []
             if "Situação:" in data:
                 correspondencia_situacao = padrao_situacao.findall(data)
-                for situacao in correspondencia_situacao:
-                    situacao.strip()
-                    divida = [situacao]
-                dividas.append(divida) 
-                               
+            for situacao in correspondencia_situacao:
+                divida = []
+                situacao = situacao.strip()
+                for linha in data.strip().split('\n'):
+                    correspondencia_linha = padrao_linha.match(linha)
+                    if correspondencia_linha:
+                        ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
+                        divida.append([ano, mes, tributo, float(valor_atual.replace(',', '.')), float(juros.replace(',', '.')), float(multa.replace(',', '.')), float(total.replace(',', '.')), int(vencidas), int(a_vencer)])
+                # divida = [situacao]
+                divida.append(situacao)
+            dividas.append(divida)
+
             imoveis.append((origem, inscricao, matricula, endereco, data, dividas))
 
 # Display the results.
 for i, (origem, inscricao, matricula, endereco, data, dividas) in enumerate(imoveis, start=1):
     print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} \n\nDados Brutos: {data} \nDividas: {dividas}")
-
+    for j, divida in enumerate(dividas, start=1):
+        print(f"Divida {j}: {divida}")
+        
 # Create a DataFrame
 df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Dados Brutos", "Dividas:"])
 
