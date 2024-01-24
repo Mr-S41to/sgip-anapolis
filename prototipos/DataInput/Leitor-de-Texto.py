@@ -1,87 +1,87 @@
 from PyPDF2 import PdfReader
 import re
-import tabula
 import pandas as pd
 
-print(pd.__version__)
-
-# Abrir o arquivo PDF em binário.
+# Open the PDF file in binary mode.
 with open("sample.pdf", 'rb') as file_pdf:
     reader_pdf = PdfReader(file_pdf)
 
-    #Obtendo o número de páginas do PDF.
+    # Get the number of pages in the PDF.
     num_paginas = len(reader_pdf.pages)
 
-    #Define um padrão para extrair as informações de endereço.
+    # Define a pattern to extract address information.
     padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
     padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:' or r'Endereço:\s*(.+?)\s*Matrícula:')
     padrao_endereco = re.compile(r'Endereço:\s*(.+?)\s*(?=\d{3}\.\d{3}\.\d{4}\.\d{3}\s*Matrícula:)')
-    #Ajustado para excluir o nummero de matrícula.
+    # Adjusted to exclude the matricula number.
     padrao_data = re.compile(r'Origem:(.*?)Endereço:', re.DOTALL)
+    padrao_dividas = re.compile(r'Situação:\s*(.+?)\sANO' or r'Situação:\s*(.+?)\sTOTAL ORIGEM:', re.DOTALL)
+    padrao_situacao = re.compile(r'VENCER\s*(.+?)\s*Situação:')
 
-    # Os objetos extraídos serão armazenados nesta lista.
+    # The extracted objects will be stored in this list.
     imoveis = []
 
-    # Iterar pelas páginas do PDF.
+    # Iterate through the pages of the PDF.
     for num_pagina in range(num_paginas):
         pagina = reader_pdf.pages[num_pagina]
 
-        #Extração do texto da página.
+        # Extract text from the page.
         text = pagina.extract_text()
 
-        # Impressão de texto para depuração.
+        # Print text for debugging.
         print(f"Texto da página {num_pagina + 1}:\n{text}\n")
 
-        # Encontrar todas as correspondências para o padrão de endereço em cada página.
+        # Find all matches for the address pattern on each page.
         correspondencia_origem = padrao_origem.findall(text)
         correspondencia_inscricao = padrao_inscricao.findall(text)
         correspondencia_matricula = padrao_matricula.findall(text)
         correspondencia_endereco = padrao_endereco.findall(text)
 
-        # Processamento cada correspondência.
+        # Process each match.
         for origem, inscricao, endereco, matricula in zip(
-            correspondencia_origem, 
-            correspondencia_inscricao, 
+            correspondencia_origem,
+            correspondencia_inscricao,
             correspondencia_endereco,
             correspondencia_matricula
         ):
-            correspondencia_matricula = padrao_matricula.findall(text)
             origem = origem.strip()
             inscricao = inscricao.strip()
             matricula = matricula.strip()
             endereco = endereco.strip()
 
-            #Aplica a expressão regular para data.
+            # Apply the regular expression for date.
             correspondencia_data = padrao_data.search(text)
 
-            #Verifica se a correspondência foi encontrada.
+            # Verify if the match was found.
             if correspondencia_data:
-                #Obtém a correspondência do grupo de captura.
+                # Get the match from the capture group.
                 data = correspondencia_data.group(1).strip()
             else:
                 data = "Padrão não encontrado para esta entrada."
-
+            data = re.sub(r'\.(\s*\.)+', '', data)
+            data = re.sub(r'ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER', '', data)
+            data = re.sub(r'data.endswith("TOTAL:")', '\n', data)
+                # correspondencia_dividas = padrao_dividas.findall(data)
+                # for dividas_match in correspondencia_dividas:
+                #     dividas = dividas_match.strip()
             imoveis.append((origem, inscricao, matricula, endereco, data))
-# Exibir os resultados.
-# for i, (origem, inscricao, matricula, endereco, data) in enumerate(imoveis,  start=1):
-    # print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} Data: {data}\n")
-       
-df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Data:"])
 
-# Exibir o DataFrame
-print(df)
+# Display the results.
+for i, (origem, inscricao, matricula, endereco, data) in enumerate(imoveis, start=1):
+    print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} \n\nDados Brutos: {data}\n")
 
-# Salvar o DataFrame como CSV
+# Create a DataFrame
+df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Dados Brutos"])
+
+# Display the DataFrame
+print("\n", df)
+
+# Save the DataFrame as CSV
 df.to_csv("Relatório.csv", index=False)
 
-# Salvar o DataFrame como Excel
-excel = "Relatório.xlsx"
-df.to_excel(excel, index=False)
-  
-#Salvar arquivo .txt.
-# data_miner = "Data Miner.txt"
-# with open(data_miner, 'w') as miner:
-#     for (origem, inscricao, matricula, endereco, data) in imoveis:
-#         miner.write("Origem: {} Inscrição: {} Matrícula: {}\n Endereço{}\n Dados {}\n".format(origem, inscricao, matricula, endereco, data))
+# Save the DataFrame as Excel
+Excel = "Relatório.xlsx"
+df.to_excel(Excel, index=False)
+
 print("Salvo com sucesso!")
