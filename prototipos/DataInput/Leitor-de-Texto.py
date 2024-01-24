@@ -17,7 +17,7 @@ with open("sample.pdf", 'rb') as file_pdf:
     # Adjusted to exclude the matricula number.
     padrao_data = re.compile(r'Origem:(.*?)Endereço:', re.DOTALL)
     padrao_dividas = re.compile(r'Situação:\s*(.+?)\sANO' or r'Situação:\s*(.+?)\sTOTAL ORIGEM:', re.DOTALL)
-    padrao_situacao = re.compile(r'VENCER\s*(.+?)\s*Situação:')
+    padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
 
     # The extracted objects will be stored in this list.
     imoveis = []
@@ -52,7 +52,6 @@ with open("sample.pdf", 'rb') as file_pdf:
 
             # Apply the regular expression for date.
             correspondencia_data = padrao_data.search(text)
-
             # Verify if the match was found.
             if correspondencia_data:
                 # Get the match from the capture group.
@@ -61,18 +60,25 @@ with open("sample.pdf", 'rb') as file_pdf:
                 data = "Padrão não encontrado para esta entrada."
             data = re.sub(r'\.(\s*\.)+', '', data)
             data = re.sub(r'ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER', '', data)
-            data = re.sub(r'data.endswith("TOTAL:")', '\n', data)
-                # correspondencia_dividas = padrao_dividas.findall(data)
-                # for dividas_match in correspondencia_dividas:
-                #     dividas = dividas_match.strip()
-            imoveis.append((origem, inscricao, matricula, endereco, data))
+            data = re.sub(r'\bTOTAL:\s*$', '', data, flags=re.MULTILINE)
+            data = re.sub(r'^TOTAL ORIGEM:.*$', '', data, flags=re.MULTILINE)
+
+            dividas = []
+            if "Situação:" in data:
+                correspondencia_situacao = padrao_situacao.findall(data)
+                for situacao in correspondencia_situacao:
+                    situacao.strip()
+                    divida = [situacao]
+                dividas.append(divida) 
+                               
+            imoveis.append((origem, inscricao, matricula, endereco, data, dividas))
 
 # Display the results.
-for i, (origem, inscricao, matricula, endereco, data) in enumerate(imoveis, start=1):
-    print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} \n\nDados Brutos: {data}\n")
+for i, (origem, inscricao, matricula, endereco, data, dividas) in enumerate(imoveis, start=1):
+    print(f"{i} \nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula} \nEndereço: {endereco} \n\nDados Brutos: {data} \nDividas: {dividas}")
 
 # Create a DataFrame
-df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Dados Brutos"])
+df = pd.DataFrame(imoveis, columns=["Origem:", "Inscrição:", "Matrícula:", "Endereço:", "Dados Brutos", "Dividas:"])
 
 # Display the DataFrame
 print("\n", df)
