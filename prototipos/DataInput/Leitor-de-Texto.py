@@ -81,7 +81,15 @@ with open("sample.pdf", 'rb') as file_pdf:
                         padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
                         correspondencia_linha = padrao_linha.match(linha)
                         if correspondencia_linha:
+                            # ano, mes, tributo, float(valor_atual), float(juros), float(multa), float(total), int(vencidas), int(a_vencer) = correspondencia_linha.groups()
                             ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
+                            valor_atual = valor_atual.replace(".", "").replace(",",".")
+                            juros = juros.replace(".", "").replace(",", ".")
+                            multa = multa.replace(".", "").replace(",",".")
+                            total = total.replace(".", "").replace(",",".")
+                            ano, mes, tributo = map(str, [ano, mes, tributo])
+                            valor_atual, juros, multa, total = map(float, [valor_atual, juros, multa, total])
+                            vencidas, a_vencer = map(int, [vencidas, a_vencer])
                             divida.append({
                                 "Ano": ano,
                                 "Mês": mes,
