@@ -55,26 +55,6 @@ with open("sample.pdf", 'rb') as file_pdf:
         correspondencia_matricula,
         correspondencia_data
     ):
-        # if correspondencia_origem:
-        #     origem = correspondencia_origem
-        # else:
-        #     origem = "Origem não processada"
-        # if correspondencia_inscricao:
-        #     inscricao = correspondencia_inscricao
-        # else:
-        #     inscricao = "Inscrição não Processada"
-        # if correspondencia_endereco: 
-        #     endereco = correspondencia_endereco
-        # else:
-        #     endereco = "Endereço não processado"
-        # if correspondencia_matricula:
-        #     matricula = correspondencia_matricula
-        # else:
-        #     matricula = "Matrícula não processada"
-        # if correspondencia_data:
-        #     data = correspondencia_data
-        # else:
-        #     data = "Dados não processados"
         
         padrao_dividas = re.compile(r'Situação:\s*(.+?)TOTAL ORIGEM:', re.DOTALL)
         padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
@@ -95,7 +75,6 @@ with open("sample.pdf", 'rb') as file_pdf:
                     correspondencia_linha = padrao_linha.match(linha)
                             
                     if correspondencia_linha:
-                        # ano, mes, tributo, float(valor_atual), float(juros), float(multa), float(total), int(vencidas), int(a_vencer) = correspondencia_linha.groups()
                         ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
                         valor_atual = valor_atual.replace(".", "").replace(",",".")
                         juros = juros.replace(".", "").replace(",", ".")
@@ -142,7 +121,7 @@ for i, imovel in enumerate(imoveis, start=1):
     dividas = imovel['Dívidas']
     
     print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {dividas}")
-# print(f"\nTotal Solicitante: {total_solicitante}")
+print(f"\nTotal Solicitante: {total_solicitante}")
 
 # Criar DataFrame
 df = pd.DataFrame(imoveis, columns=["Origem", "Inscrição",  "Endereço", "Matrícula", "Dívidas"])
@@ -156,6 +135,7 @@ print("\n", df)
 # Salvando arquivo .CSV
 df.to_csv("Relatório.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
+
 # Salvando arquivo em formato Excel
 Excel = "Relatório.xlsx"
 df.to_excel(Excel, index=False)
