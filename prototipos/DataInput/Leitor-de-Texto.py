@@ -9,6 +9,7 @@ with open("sample.pdf", 'rb') as file_pdf:
 
     text = ''
     imoveis = []
+    iss = []
     total_solicitante = 0
     
     # Iterando entre paginas do PDF.
@@ -17,7 +18,7 @@ with open("sample.pdf", 'rb') as file_pdf:
         # Extração do texto das paginas.
         text += pagina.extract_text()
         # Debugging de leitura de arquivo.
-        print(text)
+        # print(text)
         
     text = re.sub(r'\.(\s*\.)+', '\n', text)
     text = re.sub(r'ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER', '\n', text)
@@ -26,28 +27,27 @@ with open("sample.pdf", 'rb') as file_pdf:
     text = re.sub(r'^.*ANÁPOLIS$', '\n', text, flags=re.MULTILINE)
     text = re.sub(r'^Página.*$', '\n', text, flags=re.MULTILINE)
     text = re.sub(r'^Data:.*$', '\n', text, flags=re.MULTILINE)
-    # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n', text, flags=re.DOTALL)
+    text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n', text, flags=re.DOTALL)
     text = re.sub(r'\n+', '\n', text)
     text = text.strip()
     text = re.sub(r'(Endereço:)', r'\n\n\1', text)
     text = re.sub(r'(\bSituação:\b)', r'\n\n\1', text, flags=re.IGNORECASE)
 
-    # print(text)
+    print(text)
     
     padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
-    # padrao_endereco = re.compile(r'Endereço:\s*(.+?)Matrícula:')
     padrao_endereco = re.compile(r'Endereço:\s*(.+?)\s*(?=\d{3}\.\d{3}\.\d{4}\.\d{3}\s*Matrícula:)')
     padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
-    padrao_data = re.compile(r'Origem:(.+?)Endereço:', re.DOTALL)
+    padrao_data = re.compile(r'Origem:(.+?)Endereço:|TOTAL ORIGEM:', re.DOTALL)
         
     # Correspondencia de Headers.
     correspondencia_origem = padrao_origem.findall(text)
     correspondencia_inscricao = padrao_inscricao.findall(text)
     correspondencia_endereco = padrao_endereco.findall(text)
     correspondencia_matricula = padrao_matricula.findall(text)
-    correspondencia_data = padrao_data.findall(text)
-
+    correspondencia_data = padrao_data.findall(text)  
+    
     for origem, inscricao, endereco, matricula, data in zip(
         correspondencia_origem,
         correspondencia_inscricao,
@@ -55,7 +55,11 @@ with open("sample.pdf", 'rb') as file_pdf:
         correspondencia_matricula,
         correspondencia_data
     ):
-        
+        origem = origem.strip()
+        endereco = endereco.strip()
+        inscricao = inscricao.strip()
+        matricula = matricula.strip()
+            
         padrao_dividas = re.compile(r'Situação:\s*(.+?)TOTAL ORIGEM:', re.DOTALL)
         padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
         correspondencia_situacao = padrao_situacao.findall(data)
@@ -121,7 +125,7 @@ for i, imovel in enumerate(imoveis, start=1):
     dividas = imovel['Dívidas']
     
     print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {dividas}")
-print(f"\nTotal Solicitante: {total_solicitante}")
+# print(f"\nTotal Solicitante: {total_solicitante}")
 
 # Criar DataFrame
 df = pd.DataFrame(imoveis, columns=["Origem", "Inscrição",  "Endereço", "Matrícula", "Dívidas"])
