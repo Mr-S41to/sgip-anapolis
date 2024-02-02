@@ -29,12 +29,16 @@ with open("sample.pdf", 'rb') as file_pdf:
     # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n', text, flags=re.DOTALL)
     text = re.sub(r'\n+', '\n', text)
     text = text.strip()
-        
+    text = re.sub(r'(Endereço:)', r'\n\n\1', text)
+    text = re.sub(r'(\bSituação:\b)', r'\n\n\1', text, flags=re.IGNORECASE)
+
+    # print(text)
+    
     padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
     padrao_endereco = re.compile(r'Endereço:\s*(.+?)Matrícula:')
-    padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3}|\d{5}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
-    padrao_data = re.compile(r'Origem:(.+?)TOTAL ORIGEM:', re.DOTALL)
+    padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
+    padrao_data = re.compile(r'Origem:(.+?)Endereço:', re.DOTALL)
         
     # Correspondencia de Headers.
     correspondencia_origem = padrao_origem.findall(text)
@@ -71,10 +75,10 @@ with open("sample.pdf", 'rb') as file_pdf:
         # else:
         #     data = "Dados não processados"
         
-        padrao_dividas = re.compile(r'Situação:\s*(.+?)\n', re.DOTALL)
+        padrao_dividas = re.compile(r'Situação:\s*(.+?)TOTAL ORIGEM:', re.DOTALL)
         padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
-        correspondencia_situacao = padrao_situacao.findall(text)
-        correspondencia_dividas = padrao_dividas.findall(text)
+        correspondencia_situacao = padrao_situacao.findall(data)
+        correspondencia_dividas = padrao_dividas.findall(data)
                         
         dividas = []
         total_origem = 0
@@ -90,7 +94,7 @@ with open("sample.pdf", 'rb') as file_pdf:
                     correspondencia_linha = padrao_linha.match(linha)
                             
                     if correspondencia_linha:
-                            # ano, mes, tributo, float(valor_atual), float(juros), float(multa), float(total), int(vencidas), int(a_vencer) = correspondencia_linha.groups()
+                        # ano, mes, tributo, float(valor_atual), float(juros), float(multa), float(total), int(vencidas), int(a_vencer) = correspondencia_linha.groups()
                         ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
                         valor_atual = valor_atual.replace(".", "").replace(",",".")
                         juros = juros.replace(".", "").replace(",", ".")
@@ -111,14 +115,7 @@ with open("sample.pdf", 'rb') as file_pdf:
                             "Vencidas": vencidas,
                             "A Vencer": a_vencer
                         })
-                            #  ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
-                            #  valor_atual = valor_atual.replace(".", "").replace(",",".")
-                            #  juros = juros.replace(".", "").replace(",", ".")
-                            #  multa = multa.replace(".", "").replace(",",".")
-                            #  total = total.replace(".", "").replace(",",".")
-                            #  detalhes_divida.append([ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer])
-                        # else:
-                        #     detalhes_divida.append([ano or None, mes or None, tributo or None, valor_atual or None, juros or None, multa or None, total or None, vencidas or None, a_vencer or None])
+                        
                 total_origem += float(total_divida)
                 dividas.append({
                     "Situação": situacao, 
@@ -126,27 +123,39 @@ with open("sample.pdf", 'rb') as file_pdf:
                     "Total Origem": total_origem
                 })
                         
-        imoveis.append((origem, inscricao, endereco, matricula, data))   
-        # total_solicitante += float(total_origem)
+        imoveis.append({
+            "Origem": origem,
+            "Inscrição": inscricao,
+            "Matrícula": matricula,
+            "Endereço": endereco,
+            "Dívidas": dividas,
+            # "Data": data
+        })
 
 # Depuração de resultados.
-for i, (origem, inscricao, endereco, matricula, data) in enumerate(imoveis, start=1):
-    print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {data}")
+for i, imovel in enumerate(imoveis, start=1):
+    origem = imovel['Origem']
+    inscricao = imovel['Inscrição']
+    matricula = imovel['Matrícula']
+    endereco = imovel['Endereço']
+    dividas = imovel['Dívidas']
+    
+    print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {dividas}")
 # print(f"\nTotal Solicitante: {total_solicitante}")
 
 # Criar DataFrame
-# df = pd.DataFrame(imoveis, columns=["Origem", "Inscrição",  "Endereço", "Matrícula", "Dívidas"])
+df = pd.DataFrame(imoveis, columns=["Origem", "Inscrição",  "Endereço", "Matrícula", "Dívidas"])
 
 # Transformar a coluna "Dívidas" em string para evitar problemas com listas
 # df["Dívidas"] = df["Dívidas"].astype(str)
 
 # Depuração do DataFrame
-# print("\n", df)
+print("\n", df)
 
 # Salvando arquivo .CSV
-# df.to_csv("Relatório.csv", index=False)
+df.to_csv("Relatório.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 # Salvando arquivo em formato Excel
-# Excel = "Relatório.xlsx"
-# df.to_excel(Excel, index=False)
+Excel = "Relatório.xlsx"
+df.to_excel(Excel, index=False)
 print("Excel Salvo com sucesso!")
