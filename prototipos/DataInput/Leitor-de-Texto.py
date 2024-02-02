@@ -36,7 +36,8 @@ with open("sample.pdf", 'rb') as file_pdf:
     
     padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
     padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
-    padrao_endereco = re.compile(r'Endereço:\s*(.+?)Matrícula:')
+    # padrao_endereco = re.compile(r'Endereço:\s*(.+?)Matrícula:')
+    padrao_endereco = re.compile(r'Endereço:\s*(.+?)\s*(?=\d{3}\.\d{3}\.\d{4}\.\d{3}\s*Matrícula:)')
     padrao_matricula = re.compile(r'Endereço:.*?(\d{3}\.\d{3}\.\d{4}\.\d{3})\s*Matrícula:')
     padrao_data = re.compile(r'Origem:(.+?)Endereço:', re.DOTALL)
         
