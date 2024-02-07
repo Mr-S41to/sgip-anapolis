@@ -118,16 +118,24 @@ def processamento_dividas(PDF):
             inscricao = inscricao.strip()
             matricula = matricula.strip()
             
-            padrao_dividas = re.compile(r'Situação:\s*(.+?)TOTAL ORIGEM:', re.DOTALL)
-            padrao_situacao = re.compile(r'\n*(.+?)\s*Situação:')
-            correspondencia_situacao = padrao_situacao.findall(data)
+            
+            data = re.sub(r'(Dívida)', r'\n\1', data)
+            data = re.sub(r'(Ajuizada)', r'\n\1', data)
+            
+            print('-----',data)
+            padrao_dividas = re.compile(r'\n(.+?)\n\n', re.DOTALL)
             correspondencia_dividas = padrao_dividas.findall(data)
-                            
+            data_dividas = correspondencia_dividas
+            data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
+            print('+++++',data)
+                           
             dividas = []
             total_origem = 0
                             
-            if correspondencia_dividas and correspondencia_situacao:
+            if correspondencia_dividas:
                 for dividas_cliente in correspondencia_dividas:
+                    padrao_situacao = re.compile(r'\n(.+?)Situação:')
+                    correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
                     situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else None
                     divida = []
                     total_divida = 0
@@ -180,18 +188,18 @@ PDF = "sample.pdf"
 imoveis_resultados, iss_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
-# for i, imovel in enumerate(imoveis_resultados, start=1):
-#     origem = imovel['Origem']
-#     inscricao = imovel['Inscrição']
-#     matricula = imovel['Matrícula']
-#     endereco = imovel['Endereço']
-#     dividas = imovel['Dívidas']
+for i, imovel in enumerate(imoveis_resultados, start=1):
+    origem = imovel['Origem']
+    inscricao = imovel['Inscrição']
+    matricula = imovel['Matrícula']
+    endereco = imovel['Endereço']
+    dividas = imovel['Dívidas']
     
-    # print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {dividas}")
+    print(f"\n{i}\nDividas por Cliente:\nOrigem: {origem} Inscrição: {inscricao} Matrícula: {matricula}\nEndereço: {endereco}\nData: {dividas}")
 
-for j, imposto in enumerate(iss_resultados, start=1):
-    dividas_iss = imposto['Dividas-ISS']
-    print(dividas_iss)
+# for j, imposto in enumerate(iss_resultados, start=1):
+#     dividas_iss = imposto['Dividas-ISS']
+    # print(dividas_iss)
 
 
 # print(f"\nTotal Solicitante: {total_solicitante}")
