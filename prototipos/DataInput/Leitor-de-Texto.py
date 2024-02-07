@@ -119,24 +119,35 @@ def processamento_dividas(PDF):
             matricula = matricula.strip()
             
             
-            data = re.sub(r'(Dívida)', r'\n\1', data)
-            data = re.sub(r'(Ajuizada)', r'\n\1', data)
-            
+            data = re.sub(r'(Dívida)', r'\n\n\1', data)
+            data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
+            data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
             print('-----',data)
             padrao_dividas = re.compile(r'\n(.+?)\n\n', re.DOTALL)
             correspondencia_dividas = padrao_dividas.findall(data)
-            data_dividas = correspondencia_dividas
-            data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
-            print('+++++',data)
+            Xz= correspondencia_dividas
+            print("GG", Xz)
+            
+            # data_dividas = correspondencia_dividas
+            # print('+++++',data)
                            
             dividas = []
             total_origem = 0
                             
             if correspondencia_dividas:
                 for dividas_cliente in correspondencia_dividas:
-                    padrao_situacao = re.compile(r'\n(.+?)Situação:')
+                    print("XXX---XXX", dividas_cliente)
+                    padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
                     situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else None
+                    
+                    # linhas_divida = dividas_cliente.strip().split('\n')
+                    # situacao = None
+                    # for linha_divida in linhas_divida:
+                    #     if 'Situação:' in linha_divida:
+                    #         situacao = linha_divida.split('Situação:')[-1].strip()
+                    #         break
+                        
                     divida = []
                     total_divida = 0
                             
