@@ -32,7 +32,7 @@ def processamento_dividas(PDF):
         text = text.strip()
         text = re.sub(r'(Endereço:)', r'\n\n\1', text)
 
-        print(text)
+        # print(text)
         
         padrao_origem = re.compile(r'Inscrição:\s*(.+?)\s*Origem:')
         padrao_inscricao = re.compile(r'Matrícula:\s*(.+?)\s*Inscrição:')
@@ -122,31 +122,19 @@ def processamento_dividas(PDF):
             data = re.sub(r'(Dívida)', r'\n\n\1', data)
             data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
             data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
-            print('-----',data)
+            
             padrao_dividas = re.compile(r'\n(.+?)\n\n', re.DOTALL)
             correspondencia_dividas = padrao_dividas.findall(data)
-            Xz= correspondencia_dividas
-            print("GG", Xz)
-            
-            # data_dividas = correspondencia_dividas
-            # print('+++++',data)
                            
             dividas = []
             total_origem = 0
                             
             if correspondencia_dividas:
                 for dividas_cliente in correspondencia_dividas:
-                    print("XXX---XXX", dividas_cliente)
+                    
                     padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
                     situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else None
-                    
-                    # linhas_divida = dividas_cliente.strip().split('\n')
-                    # situacao = None
-                    # for linha_divida in linhas_divida:
-                    #     if 'Situação:' in linha_divida:
-                    #         situacao = linha_divida.split('Situação:')[-1].strip()
-                    #         break
                         
                     divida = []
                     total_divida = 0
