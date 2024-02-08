@@ -189,8 +189,7 @@ def processamento_dividas(PDF):
                 "Inscrição": inscricao,
                 "Matrícula": matricula,
                 "Endereço": endereco,
-                "Dívidas": dividas,
-                # "Data": data
+                "Dívidas": dividas
             })
             
     return imoveis, iss
