@@ -142,7 +142,7 @@ def processamento_dividas(PDF):
                 for dividas_contribuinte in correspondencia_dividas_iss:
                     
                     padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
-                    correspondencia_situacao_iss = padrao_situacao_iss.findall(iss_data)
+                    correspondencia_situacao_iss = padrao_situacao_iss.findall(dividas_contribuinte)
                     situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
                     
                     divida_iss = []
