@@ -18,8 +18,7 @@ def processamento_dividas(PDF):
             # Extração do texto das paginas
             text += pagina.extract_text()
             # Debugging de leitura de arquivo.
-            # print(text)
-            print("Carregando")
+            print(text)
             
         text = re.sub(r'\.(\s*\.)+', '\n', text)
         text = re.sub(r'ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER', '\n', text)
@@ -34,6 +33,7 @@ def processamento_dividas(PDF):
         text = re.sub(r'\n+', '\n', text)
         text = text.strip()
         text = re.sub(r'(Endereço:)', r'\n\n\1', text)
+        text = re.sub(r'(Total Dívida Corrente:)', r'\n\1', text)
 
         print(text)
         
@@ -45,73 +45,8 @@ def processamento_dividas(PDF):
         # Correspondencia de Headers.
         correspondencia_origem = padrao_origem.findall(text)
         correspondencia_inscricao = padrao_inscricao.findall(text)
-        
         correspondencia_endereco = padrao_endereco.findall(text)
-        # correspondencia_matricula = padrao_matricula.findall(text)
         correspondencia_data = padrao_data.findall(text)
-        
-        padrao_data_iss = re.compile(r'ISS Origem:(.+?)Total Dívida Corrente:', re.DOTALL)
-        correspondencia_data_iss = padrao_data_iss.findall(text)
-        
-        for iss_data in correspondencia_data_iss:
-            iss_data = re.sub(r'(Dívida)', r'\n\n\1', iss_data)
-            iss_data = re.sub(r'(Ajuizada)', r'\n\n\1', iss_data)
-            iss_data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', iss_data, flags=re.MULTILINE)
-
-            print("\nData ISS")
-            print(iss_data)
-            
-            dividas_iss = [] 
-            total_iss = 0
-            
-            padrao_dividas_iss = re.compile(r'\n(.+?)\n', re.DOTALL) 
-            correspondencia_dividas_iss = padrao_dividas_iss.findall(iss_data)
-            
-            if correspondencia_dividas_iss:
-                for dividas_contribuinte in correspondencia_dividas_iss:
-                    
-                    padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
-                    correspondencia_situacao_iss = padrao_situacao_iss.findall(iss_data)
-                    situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
-                    
-                    divida_iss = []
-                    total_divida_iss = 0
-                            
-                    for linha in dividas_contribuinte.strip().split('\n'):
-                        padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
-                        correspondencia_linha = padrao_linha.match(linha)
-                                
-                        if correspondencia_linha:
-                            ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
-                            valor_atual = valor_atual.replace(".", "").replace(",",".")
-                            juros = juros.replace(".", "").replace(",", ".")
-                            multa = multa.replace(".", "").replace(",",".")
-                            total = total.replace(".", "").replace(",",".")
-                            ano, mes, tributo = map(str, [ano, mes, tributo])
-                            valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
-                            vencidas, a_vencer = map(int, [vencidas, a_vencer])
-                            # total_divida += float(total)
-                            divida_iss.append({
-                                "Ano": ano,
-                                "Mês": mes,
-                                "Tributo": tributo,
-                                "Valor Atual": valor_atual,
-                                "Juros": juros,
-                                "Multa": multa,
-                                "Total": total,
-                                "Vencidas": vencidas,
-                                "A Vencer": a_vencer
-                            })
-                            
-                    total_iss += float(total_divida_iss)
-                    dividas_iss.append({
-                        "Situação-ISS": situacao_iss, 
-                        "Divida-ISS": divida_iss
-                    })
-                    
-            iss.append({
-                "Dividas-ISS": dividas_iss
-            })
                     
         for origem, endereco, inscricao, data in zip(
             correspondencia_origem,
@@ -179,26 +114,89 @@ def processamento_dividas(PDF):
                     })
                             
             imoveis.append({
-                # "Origem": origem,
+                "Origem": origem,
                 "Inscrição": inscricao,
                 # "Matrícula": matricula,
                 "Endereço": endereco,
                 "Dívidas": dividas
             })
+        
+        padrao_data_iss = re.compile(r'ISS Origem:(.+?)Total Dívida Corrente:', re.DOTALL)
+        correspondencia_data_iss = padrao_data_iss.findall(text)
+        
+        for iss_data in correspondencia_data_iss:
+            iss_data = re.sub(r'(Dívida)', r'\n\n\1', iss_data)
+            iss_data = re.sub(r'(Ajuizada)', r'\n\n\1', iss_data)
+            iss_data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', iss_data, flags=re.MULTILINE)
+
+            print("\nData ISS")
+            print(iss_data)
             
+            dividas_iss = [] 
+            total_iss = 0
+            
+            padrao_dividas_iss = re.compile(r'\n(.+?)\n\n', re.DOTALL) 
+            correspondencia_dividas_iss = padrao_dividas_iss.findall(iss_data)
+            
+            if correspondencia_dividas_iss:
+                for dividas_contribuinte in correspondencia_dividas_iss:
+                    
+                    padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
+                    correspondencia_situacao_iss = padrao_situacao_iss.findall(iss_data)
+                    situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
+                    
+                    divida_iss = []
+                    total_divida_iss = 0
+                            
+                    for linha in dividas_contribuinte.strip().split('\n'):
+                        padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
+                        correspondencia_linha = padrao_linha.match(linha)
+                                
+                        if correspondencia_linha:
+                            ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
+                            valor_atual = valor_atual.replace(".", "").replace(",",".")
+                            juros = juros.replace(".", "").replace(",", ".")
+                            multa = multa.replace(".", "").replace(",",".")
+                            total = total.replace(".", "").replace(",",".")
+                            ano, mes, tributo = map(str, [ano, mes, tributo])
+                            valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
+                            vencidas, a_vencer = map(int, [vencidas, a_vencer])
+                            # total_divida += float(total)
+                            divida_iss.append({
+                                "Ano": ano,
+                                "Mês": mes,
+                                "Tributo": tributo,
+                                "Valor Atual": valor_atual,
+                                "Juros": juros,
+                                "Multa": multa,
+                                "Total": total,
+                                "Vencidas": vencidas,
+                                "A Vencer": a_vencer
+                            })
+                            
+                    total_iss += float(total_divida_iss)
+                    dividas_iss.append({
+                        "Situação-ISS": situacao_iss, 
+                        "Divida-ISS": divida_iss
+                    })
+                    
+            iss.append({
+                "Dividas-ISS": dividas_iss
+            })
+                
     return imoveis, iss
 
-PDF = "sample.pdf"
+PDF = "34.pdf"
 imoveis_resultados, iss_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
 for i, imovel in enumerate(imoveis_resultados, start=1):
-    # origem = imovel['Origem']
+    origem = imovel['Origem']
     inscricao = imovel['Inscrição']
     endereco = imovel['Endereço']
     dividas = imovel['Dívidas']
     
-    print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
+    # print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
 
 for j, imposto in enumerate(iss_resultados, start=1):
     dividas_iss = imposto['Dividas-ISS']
@@ -207,19 +205,19 @@ for j, imposto in enumerate(iss_resultados, start=1):
 # print(f"\nTotal Solicitante: {total_solicitante}")
 
 # Criar DataFrame
-# df = pd.DataFrame(imoveis, columns=["Origem", "Inscrição",  "Endereço", "Matrícula", "Dívidas"])
+df = pd.DataFrame(imoveis_resultados, columns=["Origem", "Inscrição",  "Endereço", "Dívidas"])
 
 # Transformar a coluna "Dívidas" em string para evitar problemas com listas
 # df["Dívidas"] = df["Dívidas"].astype(str)
 
 # Depuração do DataFrame
-# print("\n", df)
+print("\n", df)
 
 # # Salvando arquivo .CSV
-# df.to_csv("Relatório.csv", index=False)
-# print("Arquivo CSV Salvo com sucesso!")
+df.to_csv("Relatório.csv", index=False)
+print("Arquivo CSV Salvo com sucesso!")
 
 # # Salvando arquivo em formato Excel
-# Excel = "Relatório.xlsx"
-# df.to_excel(Excel, index=False)
-# print("Excel Salvo com sucesso!")
+Excel = "Relatório.xlsx"
+df.to_excel(Excel, index=False)
+print("Excel Salvo com sucesso!")
