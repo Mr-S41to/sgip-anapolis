@@ -33,20 +33,20 @@ def processamento_dividas(PDF):
         text = re.sub(r'\n+', '\n', text)
         text = text.strip()
         text = re.sub(r'(Endereço:)', r'\n\n\1', text)
-        text = re.sub(r'(Total Dívida Corrente:)', r'\n\1', text)
+        text = re.sub(r'(Total Dívida Corrente:)', r'\n\n\1', text)
 
         print(text)
         
         padrao_origem = re.compile(r'Inscrição:(.+?)*Origem:')
         padrao_inscricao = re.compile(r'\n(.+?)\s*Inscrição:')
         padrao_endereco = re.compile(r'Endereço:\s*(.+?)\n')
-        padrao_data = re.compile(r'Origem:(.+?)Endereço:', re.DOTALL)
+        padrao_data = re.compile(r'Origem:(.+?)\n\n', re.DOTALL)
             
         # Correspondencia de Headers.
         correspondencia_origem = padrao_origem.findall(text)
         correspondencia_inscricao = padrao_inscricao.findall(text)
         correspondencia_endereco = padrao_endereco.findall(text)
-        correspondencia_data = padrao_data.findall(text)
+        correspondencia_data = padrao_data.findall(text)    
                     
         for origem, endereco, inscricao, data in zip(
             correspondencia_origem,
@@ -58,7 +58,7 @@ def processamento_dividas(PDF):
             # endereco = endereco.strip()
             # inscricao = inscricao.strip()
             
-            
+            print("XXX\n",data)     
             data = re.sub(r'(Dívida)', r'\n\n\1', data)
             data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
             data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
@@ -183,10 +183,10 @@ def processamento_dividas(PDF):
             iss.append({
                 "Dividas-ISS": dividas_iss
             })
-                
+            
     return imoveis, iss
 
-PDF = "34.pdf"
+PDF = "02-2.pdf"
 imoveis_resultados, iss_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -196,7 +196,7 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
     endereco = imovel['Endereço']
     dividas = imovel['Dívidas']
     
-    # print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
+    print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
 
 for j, imposto in enumerate(iss_resultados, start=1):
     dividas_iss = imposto['Dividas-ISS']
@@ -213,11 +213,11 @@ df = pd.DataFrame(imoveis_resultados, columns=["Origem", "Inscrição",  "Endere
 # Depuração do DataFrame
 print("\n", df)
 
-# # Salvando arquivo .CSV
+# Salvando arquivo .CSV
 df.to_csv("Relatório.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
-# # Salvando arquivo em formato Excel
+# Salvando arquivo em formato Excel
 Excel = "Relatório.xlsx"
 df.to_excel(Excel, index=False)
 print("Excel Salvo com sucesso!")
