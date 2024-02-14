@@ -37,7 +37,7 @@ def processamento_dividas(PDF):
 
         print(text)
         
-        padrao_origem = re.compile(r'Inscrição:(.+?)*Origem:')
+        padrao_origem = re.compile(r'Inscrição:\s(.+?)\sOrigem:')
         padrao_inscricao = re.compile(r'\n(.+?)\s*Inscrição:')
         padrao_endereco = re.compile(r'Endereço:\s*(.+?)\n')
         padrao_data = re.compile(r'Origem:(.+?)\n\n', re.DOTALL)
@@ -58,7 +58,6 @@ def processamento_dividas(PDF):
             # endereco = endereco.strip()
             # inscricao = inscricao.strip()
             
-            print("XXX\n",data)     
             data = re.sub(r'(Dívida)', r'\n\n\1', data)
             data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
             data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
@@ -121,73 +120,73 @@ def processamento_dividas(PDF):
                 "Dívidas": dividas
             })
         
-        padrao_data_iss = re.compile(r'ISS Origem:(.+?)Total Dívida Corrente:', re.DOTALL)
-        correspondencia_data_iss = padrao_data_iss.findall(text)
+    #     padrao_data_iss = re.compile(r'ISS Origem:(.+?)Total Dívida Corrente:', re.DOTALL)
+    #     correspondencia_data_iss = padrao_data_iss.findall(text)
         
-        for iss_data in correspondencia_data_iss:
-            iss_data = re.sub(r'(Dívida)', r'\n\n\1', iss_data)
-            iss_data = re.sub(r'(Ajuizada)', r'\n\n\1', iss_data)
-            iss_data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', iss_data, flags=re.MULTILINE)
+    #     for iss_data in correspondencia_data_iss:
+    #         iss_data = re.sub(r'(Dívida)', r'\n\n\1', iss_data)
+    #         iss_data = re.sub(r'(Ajuizada)', r'\n\n\1', iss_data)
+    #         iss_data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', iss_data, flags=re.MULTILINE)
 
-            print("\nData ISS")
-            print(iss_data)
+    #         print("\nData ISS")
+    #         print(iss_data)
             
-            dividas_iss = [] 
-            total_iss = 0
+    #         dividas_iss = [] 
+    #         total_iss = 0
             
-            padrao_dividas_iss = re.compile(r'\n(.+?)\n\n', re.DOTALL) 
-            correspondencia_dividas_iss = padrao_dividas_iss.findall(iss_data)
+    #         padrao_dividas_iss = re.compile(r'\n(.+?)\n\n', re.DOTALL) 
+    #         correspondencia_dividas_iss = padrao_dividas_iss.findall(iss_data)
             
-            if correspondencia_dividas_iss:
-                for dividas_contribuinte in correspondencia_dividas_iss:
+    #         if correspondencia_dividas_iss:
+    #             for dividas_contribuinte in correspondencia_dividas_iss:
                     
-                    padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
-                    correspondencia_situacao_iss = padrao_situacao_iss.findall(dividas_contribuinte)
-                    situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
+    #                 padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
+    #                 correspondencia_situacao_iss = padrao_situacao_iss.findall(dividas_contribuinte)
+    #                 situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
                     
-                    divida_iss = []
-                    total_divida_iss = 0
+    #                 divida_iss = []
+    #                 total_divida_iss = 0
                             
-                    for linha in dividas_contribuinte.strip().split('\n'):
-                        padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
-                        correspondencia_linha = padrao_linha.match(linha)
+    #                 for linha in dividas_contribuinte.strip().split('\n'):
+    #                     padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
+    #                     correspondencia_linha = padrao_linha.match(linha)
                                 
-                        if correspondencia_linha:
-                            ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
-                            valor_atual = valor_atual.replace(".", "").replace(",",".")
-                            juros = juros.replace(".", "").replace(",", ".")
-                            multa = multa.replace(".", "").replace(",",".")
-                            total = total.replace(".", "").replace(",",".")
-                            ano, mes, tributo = map(str, [ano, mes, tributo])
-                            valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
-                            vencidas, a_vencer = map(int, [vencidas, a_vencer])
-                            # total_divida += float(total)
-                            divida_iss.append({
-                                "Ano": ano,
-                                "Mês": mes,
-                                "Tributo": tributo,
-                                "Valor Atual": valor_atual,
-                                "Juros": juros,
-                                "Multa": multa,
-                                "Total": total,
-                                "Vencidas": vencidas,
-                                "A Vencer": a_vencer
-                            })
+    #                     if correspondencia_linha:
+    #                         ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
+    #                         valor_atual = valor_atual.replace(".", "").replace(",",".")
+    #                         juros = juros.replace(".", "").replace(",", ".")
+    #                         multa = multa.replace(".", "").replace(",",".")
+    #                         total = total.replace(".", "").replace(",",".")
+    #                         ano, mes, tributo = map(str, [ano, mes, tributo])
+    #                         valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
+    #                         vencidas, a_vencer = map(int, [vencidas, a_vencer])
+    #                         # total_divida += float(total)
+    #                         divida_iss.append({
+    #                             "Ano": ano,
+    #                             "Mês": mes,
+    #                             "Tributo": tributo,
+    #                             "Valor Atual": valor_atual,
+    #                             "Juros": juros,
+    #                             "Multa": multa,
+    #                             "Total": total,
+    #                             "Vencidas": vencidas,
+    #                             "A Vencer": a_vencer
+    #                         })
                             
-                    total_iss += float(total_divida_iss)
-                    dividas_iss.append({
-                        "Situação-ISS": situacao_iss, 
-                        "Divida-ISS": divida_iss
-                    })
+    #                 total_iss += float(total_divida_iss)
+    #                 dividas_iss.append({
+    #                     "Situação-ISS": situacao_iss, 
+    #                     "Divida-ISS": divida_iss
+    #                 })
                     
-            iss.append({
-                "Dividas-ISS": dividas_iss
-            })
+    #         iss.append({
+    #             "Dividas-ISS": dividas_iss
+    #         })
             
-    return imoveis, iss
+    return imoveis
 
-PDF = "02-2.pdf"
-imoveis_resultados, iss_resultados = processamento_dividas(PDF)
+PDF = "37.pdf"
+imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
 for i, imovel in enumerate(imoveis_resultados, start=1):
@@ -197,10 +196,6 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
     dividas = imovel['Dívidas']
     
     print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
-
-for j, imposto in enumerate(iss_resultados, start=1):
-    dividas_iss = imposto['Dividas-ISS']
-    print(f"\nISS:\n{dividas_iss}")
 
 # print(f"\nTotal Solicitante: {total_solicitante}")
 
