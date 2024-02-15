@@ -94,62 +94,66 @@ def processamento_dividas(PDF):
                             vencidas, a_vencer = map(int, [vencidas, a_vencer])
                             total_divida += float(total)
                             divida.append({
+                                "Endereço": endereco,
+                                "Origem": origem,
+                                "Inscrição": inscricao,
                                 "Ano": ano,
                                 "Mês": mes,
                                 "Tributo": tributo,
+                                "Situação": situacao, 
                                 "Valor Atual": valor_atual,
                                 "Juros": juros,
                                 "Multa": multa,
-                                "Total": total,
+                                "Total Divida": total,
                                 "Vencidas": vencidas,
                                 "A Vencer": a_vencer
                             })
                             
                     total_origem += float(total_divida)
                     dividas.append({
-                        "Situação": situacao, 
                         "Divida": divida,
                         "Total Origem": total_origem
                     })
                             
             imoveis.append({
-                "Origem": origem,
                 "Inscrição": inscricao,
-                # "Matrícula": matricula,
-                "Endereço": endereco,
                 "Dívidas": dividas
             })
             
     return imoveis
 
-PDF = "05.pdf"
+PDF = "sample.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
+dfs = []
+
+# Depuração de resultados.
 for i, imovel in enumerate(imoveis_resultados, start=1):
-    origem = imovel['Origem']
     inscricao = imovel['Inscrição']
-    endereco = imovel['Endereço']
     dividas = imovel['Dívidas']
     
-    print(f"\n{i}\nDividas por Cliente:\nOrigem:  Inscrição: {inscricao} \nEndereço: {endereco}\nDividas: {dividas}")
+    for divida in dividas:
+        df = pd.DataFrame(divida['Divida'], columns=["Inscrição", "Origem", "Endereço", "Tributo", "Ano", "Mês",  "Situação", "Valor Atual", "Juros", "Multa", "Total Divida", "Vencidas", "A Vencer"])
+        
+        # Adicionando colunas adicionais se as chaves existirem    
+        # df["Inscrição"] = inscricao
+        
+        
+        # Adicionando o DataFrame atual à lista
+        dfs.append(df)
 
-# print(f"\nTotal Solicitante: {total_solicitante}")
+# Concatenando todos os DataFrames na lista em um único DataFrame
+df_final = pd.concat(dfs, ignore_index=True)
 
-# Criar DataFrame
-df = pd.DataFrame(imoveis_resultados, columns=["Origem", "Inscrição",  "Endereço", "Dívidas"])
-
-# Transformar a coluna "Dívidas" em string para evitar problemas com listas
-# df["Dívidas"] = df["Dívidas"].astype(str)
-
-# Depuração do DataFrame
-print("\n", df)
+# Depuração do DataFrame final
+print(df_final)
 
 # Salvando arquivo .CSV
-df.to_csv("Relatório.csv", index=False)
+df_final.to_csv("Relatório_Final.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
-Excel = "Relatório.xlsx"
-df.to_excel(Excel, index=False)
+Excel = "Relatório_Final.xlsx"
+df_final.to_excel(Excel, index=False)
 print("Arquivo Excel Salvo com sucesso!")
