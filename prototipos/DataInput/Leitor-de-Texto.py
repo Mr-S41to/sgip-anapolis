@@ -119,73 +119,10 @@ def processamento_dividas(PDF):
                 "Endereço": endereco,
                 "Dívidas": dividas
             })
-        
-    #     padrao_data_iss = re.compile(r'ISS Origem:(.+?)Total Dívida Corrente:', re.DOTALL)
-    #     correspondencia_data_iss = padrao_data_iss.findall(text)
-        
-    #     for iss_data in correspondencia_data_iss:
-    #         iss_data = re.sub(r'(Dívida)', r'\n\n\1', iss_data)
-    #         iss_data = re.sub(r'(Ajuizada)', r'\n\n\1', iss_data)
-    #         iss_data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', iss_data, flags=re.MULTILINE)
-
-    #         print("\nData ISS")
-    #         print(iss_data)
-            
-    #         dividas_iss = [] 
-    #         total_iss = 0
-            
-    #         padrao_dividas_iss = re.compile(r'\n(.+?)\n\n', re.DOTALL) 
-    #         correspondencia_dividas_iss = padrao_dividas_iss.findall(iss_data)
-            
-    #         if correspondencia_dividas_iss:
-    #             for dividas_contribuinte in correspondencia_dividas_iss:
-                    
-    #                 padrao_situacao_iss = re.compile(r'\n*(.+?)Situação:')
-    #                 correspondencia_situacao_iss = padrao_situacao_iss.findall(dividas_contribuinte)
-    #                 situacao_iss = correspondencia_situacao_iss[0].strip() if correspondencia_situacao_iss else None
-                    
-    #                 divida_iss = []
-    #                 total_divida_iss = 0
-                            
-    #                 for linha in dividas_contribuinte.strip().split('\n'):
-    #                     padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
-    #                     correspondencia_linha = padrao_linha.match(linha)
-                                
-    #                     if correspondencia_linha:
-    #                         ano, mes, tributo, valor_atual, juros, multa, total, vencidas, a_vencer = correspondencia_linha.groups()
-    #                         valor_atual = valor_atual.replace(".", "").replace(",",".")
-    #                         juros = juros.replace(".", "").replace(",", ".")
-    #                         multa = multa.replace(".", "").replace(",",".")
-    #                         total = total.replace(".", "").replace(",",".")
-    #                         ano, mes, tributo = map(str, [ano, mes, tributo])
-    #                         valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
-    #                         vencidas, a_vencer = map(int, [vencidas, a_vencer])
-    #                         # total_divida += float(total)
-    #                         divida_iss.append({
-    #                             "Ano": ano,
-    #                             "Mês": mes,
-    #                             "Tributo": tributo,
-    #                             "Valor Atual": valor_atual,
-    #                             "Juros": juros,
-    #                             "Multa": multa,
-    #                             "Total": total,
-    #                             "Vencidas": vencidas,
-    #                             "A Vencer": a_vencer
-    #                         })
-                            
-    #                 total_iss += float(total_divida_iss)
-    #                 dividas_iss.append({
-    #                     "Situação-ISS": situacao_iss, 
-    #                     "Divida-ISS": divida_iss
-    #                 })
-                    
-    #         iss.append({
-    #             "Dividas-ISS": dividas_iss
-    #         })
             
     return imoveis
 
-PDF = "37.pdf"
+PDF = "05.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -215,4 +152,4 @@ print("Arquivo CSV Salvo com sucesso!")
 # Salvando arquivo em formato Excel
 Excel = "Relatório.xlsx"
 df.to_excel(Excel, index=False)
-print("Excel Salvo com sucesso!")
+print("Arquivo Excel Salvo com sucesso!")
