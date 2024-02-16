@@ -66,11 +66,11 @@ def processamento_dividas(PDF):
             correspondencia_lote = padrao_lote.findall(endereco)
             
             quadra = correspondencia_quadra[0].strip()
-            lote = correspondencia_lote[0].strip() 
+            lote = correspondencia_lote[0].strip()
             # print(quadra, lote)
                        
-            data = re.sub(r'(Dívida)', r'\n\1', data)
-            data = re.sub(r'(Ajuizada)', r'\n\1', data)
+            data = re.sub(r'(Dívida)', r'\n\n\1', data)
+            data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
             data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)          
             
             padrao_dividas = re.compile(r'\n(.+?)\n\n', re.DOTALL)
@@ -80,7 +80,7 @@ def processamento_dividas(PDF):
             total_origem = 0
                             
             if correspondencia_dividas:
-                for dividas_cliente in correspondencia_dividas:
+                for dividas_cliente in correspondencia_dividas:                    
 
                     padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
