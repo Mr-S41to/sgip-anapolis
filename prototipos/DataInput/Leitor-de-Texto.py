@@ -27,7 +27,7 @@ def processamento_dividas(PDF):
         text = re.sub(r'^.*ANÁPOLIS$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'^Página.*$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'^Data:.*$', '\n', text, flags=re.MULTILINE)
-        # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
+        text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
         text = re.sub(r',\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r';\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'\n+', '\n', text)
@@ -46,7 +46,7 @@ def processamento_dividas(PDF):
         correspondencia_origem = padrao_origem.findall(text)
         correspondencia_inscricao = padrao_inscricao.findall(text)
         correspondencia_endereco = padrao_endereco.findall(text)
-        correspondencia_data = padrao_data.findall(text)    
+        correspondencia_data = padrao_data.findall(text)
                     
         for origem, endereco, inscricao, data in zip(
             correspondencia_origem,
@@ -58,10 +58,20 @@ def processamento_dividas(PDF):
             # endereco = endereco.strip()
             # inscricao = inscricao.strip()
             
-            data = re.sub(r'(Dívida)', r'\n\n\1', data)
-            data = re.sub(r'(Ajuizada)', r'\n\n\1', data)
-            data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)
-            # data = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n', data, flags=re.MULTILINE)
+            # print("\n---Endereço---\n", endereco)
+            padrao_quadra = re.compile(r'Q[Dd].\s(.+?)\s')
+            padrao_lote = re.compile(r'L[Tt].(.+?)\s')
+            
+            correspondencia_quadra = padrao_quadra.findall(endereco)
+            correspondencia_lote = padrao_lote.findall(endereco)
+            
+            quadra = correspondencia_quadra[0].strip()
+            lote = correspondencia_lote[0].strip() 
+            # print(quadra, lote)
+                       
+            data = re.sub(r'(Dívida)', r'\n\1', data)
+            data = re.sub(r'(Ajuizada)', r'\n\1', data)
+            data = re.sub(r'^TOTAL ORIGEM:.*$', '\n', data, flags=re.MULTILINE)          
             
             padrao_dividas = re.compile(r'\n(.+?)\n\n', re.DOTALL)
             correspondencia_dividas = padrao_dividas.findall(data)
@@ -77,7 +87,7 @@ def processamento_dividas(PDF):
                     situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else None
                         
                     divida = []
-                    total_divida = 0
+                    total_dividas = 0
                             
                     for linha in dividas_cliente.strip().split('\n'):
                         padrao_linha = re.compile(r'(\d{4}) (\d{2}) (.*?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?) (\d+) (\d+)')
@@ -90,13 +100,14 @@ def processamento_dividas(PDF):
                             multa = multa.replace(".", "").replace(",",".")
                             total = total.replace(".", "").replace(",",".")
                             ano, mes, tributo = map(str, [ano, mes, tributo])
-                            valor_atual, juros, multa = map(float, [valor_atual, juros, multa])
+                            valor_atual, juros, multa, total = map(float, [valor_atual, juros, multa, total])
                             vencidas, a_vencer = map(int, [vencidas, a_vencer])
-                            total_divida += float(total)
+                            total_dividas += float(total)
                             divida.append({
-                                "Endereço": endereco,
-                                "Origem": origem,
                                 "Inscrição": inscricao,
+                                "Quadra": quadra,
+                                "Lote": lote,                                
+                                "Origem": origem,
                                 "Ano": ano,
                                 "Mês": mes,
                                 "Tributo": tributo,
@@ -109,7 +120,7 @@ def processamento_dividas(PDF):
                                 "A Vencer": a_vencer
                             })
                             
-                    total_origem += float(total_divida)
+                    total_origem += float(total_dividas)
                     dividas.append({
                         "Divida": divida,
                         "Total Origem": total_origem
@@ -122,7 +133,7 @@ def processamento_dividas(PDF):
             
     return imoveis
 
-PDF = "sample.pdf"
+PDF = "03.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -134,11 +145,7 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
     dividas = imovel['Dívidas']
     
     for divida in dividas:
-        df = pd.DataFrame(divida['Divida'], columns=["Inscrição", "Origem", "Endereço", "Tributo", "Ano", "Mês",  "Situação", "Valor Atual", "Juros", "Multa", "Total Divida", "Vencidas", "A Vencer"])
-        
-        # Adicionando colunas adicionais se as chaves existirem    
-        # df["Inscrição"] = inscricao
-        
+        df = pd.DataFrame(divida['Divida'], columns=["Inscrição", "Quadra", "Lote", "Origem", "Tributo", "Ano", "Mês",  "Situação", "Valor Atual", "Juros", "Multa", "Total Divida", "Vencidas", "A Vencer"])               
         
         # Adicionando o DataFrame atual à lista
         dfs.append(df)
