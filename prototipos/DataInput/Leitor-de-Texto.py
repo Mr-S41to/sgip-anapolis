@@ -27,7 +27,7 @@ def processamento_dividas(PDF):
         text = re.sub(r'^.*ANÁPOLIS$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'^Página.*$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'^Data:.*$', '\n', text, flags=re.MULTILINE)
-        text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
+        # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
         text = re.sub(r',\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r';\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'\n+', '\n', text)
@@ -58,7 +58,7 @@ def processamento_dividas(PDF):
             # endereco = endereco.strip()
             # inscricao = inscricao.strip()
             
-            # print("\n---Endereço---\n", endereco)
+            print("\n-----Dados-----", data)
             padrao_quadra = re.compile(r'Q[Dd].\s(.+?)\s')
             padrao_lote = re.compile(r'L[Tt].(.+?)\s')
             
@@ -84,7 +84,7 @@ def processamento_dividas(PDF):
 
                     padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
-                    situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else None
+                    situacao = correspondencia_situacao[0].strip() 
                         
                     divida = []
                     total_dividas = 0
@@ -130,10 +130,10 @@ def processamento_dividas(PDF):
                 "Inscrição": inscricao,
                 "Dívidas": dividas
             })
-            
+                      
     return imoveis
 
-PDF = "03.pdf"
+PDF = "02.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -157,10 +157,10 @@ df_final = pd.concat(dfs, ignore_index=True)
 print(df_final)
 
 # Salvando arquivo .CSV
-df_final.to_csv("Relatório_Final.csv", index=False)
+df_final.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
-Excel = "Relatório_Final.xlsx"
+Excel = "RelatórioFinal.xlsx"
 df_final.to_excel(Excel, index=False)
 print("Arquivo Excel Salvo com sucesso!")
