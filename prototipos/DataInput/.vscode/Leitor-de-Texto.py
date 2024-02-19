@@ -65,8 +65,8 @@ def processamento_dividas(PDF):
             correspondencia_quadra = padrao_quadra.findall(endereco)
             correspondencia_lote = padrao_lote.findall(endereco)
             
-            quadra = correspondencia_quadra[0].strip() if correspondencia_quadra else "Desconhecida"
-            lote = correspondencia_lote[0].strip() if correspondencia_lote else "Desconhecido"
+            quadra = correspondencia_quadra[0].strip() if correspondencia_quadra else "--"
+            lote = correspondencia_lote[0].strip() if correspondencia_lote else "--"
 
             # print(quadra, lote)
                        
@@ -85,7 +85,7 @@ def processamento_dividas(PDF):
 
                     padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
-                    situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else "Não identificada"
+                    situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else "Desconhecida"
                         
                     divida = []
                     total_dividas = 0
@@ -163,5 +163,23 @@ print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
-df_final.to_excel(Excel, index=False)
+with pd.ExcelWriter(Excel, engine='xlsxwriter') as writer:
+    df_final.to_excel(writer, index=False)
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']  # Mude 'Sheet1' para o nome da sua planilha, se necessário
+
+    blue_format = workbook.add_format({'bg_color': '#C6E2FF'})
+    white_format = workbook.add_format({'bg_color': 'white'})
+
+    for row_num in range(1, len(df_final) + 1):
+        if row_num % 2 == 0:
+            worksheet.set_row(row_num, cell_format=blue_format)
+        else:
+            worksheet.set_row(row_num, cell_format=white_format)
+
+    worksheet.set_column('A:A', 18)  # Define a largura da coluna 'A' para 15
+    worksheet.set_column('D:D', 12)
+    worksheet.set_column('E:E', 14)
+    worksheet.set_column('H:H', 18)
+    worksheet.set_column('I:M', 10)
 print("Arquivo Excel Salvo com sucesso!")
