@@ -30,6 +30,7 @@ def processamento_dividas(PDF):
         # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
         text = re.sub(r',\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r';\s(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
+        text = re.sub(r'\d(.+?)Matrícula:\s', '\n', text, flags=re.MULTILINE)
         text = re.sub(r'\n+', '\n', text)
         text = text.strip()
         text = re.sub(r'(Endereço:)', r'\n\n\1', text)
@@ -58,14 +59,13 @@ def processamento_dividas(PDF):
             # endereco = endereco.strip()
             # inscricao = inscricao.strip()
             
-            print("\n-----Dados-----", data)
-            padrao_quadra = re.compile(r'Q[Dd].\s(.+?)\s')
+            padrao_quadra = re.compile(r'Q[Dd].(.+?)\s')
             padrao_lote = re.compile(r'L[Tt].(.+?)\s')
             
             correspondencia_quadra = padrao_quadra.findall(endereco)
             correspondencia_lote = padrao_lote.findall(endereco)
             
-            quadra = correspondencia_quadra[0].strip() if correspondencia_quadra else "Desconhecido"
+            quadra = correspondencia_quadra[0].strip() if correspondencia_quadra else "Desconhecida"
             lote = correspondencia_lote[0].strip() if correspondencia_lote else "Desconhecido"
 
             # print(quadra, lote)
@@ -85,7 +85,7 @@ def processamento_dividas(PDF):
 
                     padrao_situacao = re.compile(r'\n*(.+?)Situação:')
                     correspondencia_situacao = padrao_situacao.findall(dividas_cliente)
-                    situacao = correspondencia_situacao[0].strip() 
+                    situacao = correspondencia_situacao[0].strip() if correspondencia_situacao else "Não identificada"
                         
                     divida = []
                     total_dividas = 0
@@ -134,7 +134,7 @@ def processamento_dividas(PDF):
                       
     return imoveis
 
-PDF = "01.pdf"
+PDF = "03.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
