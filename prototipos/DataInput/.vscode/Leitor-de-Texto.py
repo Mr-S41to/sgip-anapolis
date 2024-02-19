@@ -154,32 +154,49 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
 # Concatenando todos os DataFrames na lista em um único DataFrame
 df_final = pd.concat(dfs, ignore_index=True)
 
+total_divida = df_final['Total Divida'].sum()
+total_multa = df_final['Multa'].sum()
+total_juros = df_final['Juros'].sum()
+total_valor_atual = df_final['Valor Atual'].sum()
+
+resultados = {"Inscrição": "TOTAL:", "Quadra": "", "Lote": "", "Origem": "", "Tributo": "", "Ano": "", "Mês": "JUROS:",  "Situação":  total_juros, "Valor Atual": "MULTA:", "Juros": total_multa, "Multa": "GERAL:", "Total Divida": total_divida, "Vencidas": "", "A Vencer":""}
+
+df_total = pd.DataFrame([resultados])
+
+df_exel= pd.concat([df_final, df_total], ignore_index=True)
+
 # Depuração do DataFrame final
-print(df_final)
+print(df_exel)
 
 # Salvando arquivo .CSV
-df_final.to_csv("RelatórioFinal.csv", index=False)
+df_exel.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
 with pd.ExcelWriter(Excel, engine='xlsxwriter') as writer:
-    df_final.to_excel(writer, index=False)
+    df_exel.to_excel(writer, index=False)
     workbook = writer.book
     worksheet = writer.sheets['Sheet1']  # Mude 'Sheet1' para o nome da sua planilha, se necessário
 
     blue_format = workbook.add_format({'bg_color': '#C6E2FF'})
-    white_format = workbook.add_format({'bg_color': 'white'})
+    white_format = workbook.add_format({'bg_color': '#FEFEFE'})
 
-    for row_num in range(1, len(df_final) + 1):
+    bold_format = workbook.add_format({'bold': True})
+    
+    for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:
             worksheet.set_row(row_num, cell_format=blue_format)
         else:
             worksheet.set_row(row_num, cell_format=white_format)
+        
+        if df_exel.iloc[row_num-1]['Inscrição'] == 'TOTAL:':
+            worksheet.set_row(row_num, cell_format=bold_format)
 
     worksheet.set_column('A:A', 18)  # Define a largura da coluna 'A' para 15
     worksheet.set_column('D:D', 12)
     worksheet.set_column('E:E', 14)
-    worksheet.set_column('H:H', 18)
-    worksheet.set_column('I:M', 10)
+    worksheet.set_column('G:L', 14)
+    
+
 print("Arquivo Excel Salvo com sucesso!")
