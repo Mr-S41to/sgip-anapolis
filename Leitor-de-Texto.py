@@ -134,7 +134,7 @@ def processamento_dividas(PDF):
                       
     return imoveis
 
-PDF = "00.pdf"
+PDF = "15.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
