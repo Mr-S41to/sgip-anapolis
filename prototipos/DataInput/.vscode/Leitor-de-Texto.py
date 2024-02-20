@@ -134,7 +134,7 @@ def processamento_dividas(PDF):
                       
     return imoveis
 
-PDF = "03.pdf"
+PDF = "00.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -159,7 +159,7 @@ total_multa = df_final['Multa'].sum()
 total_juros = df_final['Juros'].sum()
 total_valor_atual = df_final['Valor Atual'].sum()
 
-resultados = {"Inscrição": "TOTAL:", "Quadra": "", "Lote": "", "Origem": "", "Tributo": "", "Ano": "", "Mês": "JUROS:",  "Situação":  total_juros, "Valor Atual": "MULTA:", "Juros": total_multa, "Multa": "GERAL:", "Total Divida": total_divida, "Vencidas": "", "A Vencer":""}
+resultados = {"Inscrição": "TOTAIS:", "Quadra": "", "Lote": "", "Origem": "", "Tributo": "", "Ano": "", "Mês": "JUROS:",  "Situação":  total_juros, "Valor Atual": "MULTA:", "Juros": total_multa, "Multa": "GERAL:", "Total Divida": total_divida, "Vencidas": "", "A Vencer":""}
 
 df_total = pd.DataFrame([resultados])
 
@@ -190,13 +190,16 @@ with pd.ExcelWriter(Excel, engine='xlsxwriter') as writer:
         else:
             worksheet.set_row(row_num, cell_format=white_format)
         
-        if df_exel.iloc[row_num-1]['Inscrição'] == 'TOTAL:':
+        if df_exel.iloc[row_num-1]['Inscrição'] == 'TOTAIS:':
             worksheet.set_row(row_num, cell_format=bold_format)
 
-    worksheet.set_column('A:A', 18)  # Define a largura da coluna 'A' para 15
+    worksheet.set_column('A:A', 16)  # Define a largura da coluna 'A' para 15
+    worksheet.set_column('B:C', 6)
     worksheet.set_column('D:D', 12)
     worksheet.set_column('E:E', 14)
-    worksheet.set_column('G:L', 14)
-    
+    worksheet.set_column('F:G', 6)
+    worksheet.set_column('H:H', 14)
+    worksheet.set_column('I:L', 12)
+    worksheet.set_column('M:N', 8)
 
 print("Arquivo Excel Salvo com sucesso!")
