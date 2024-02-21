@@ -169,13 +169,15 @@ df_exel= pd.concat([df_final, df_total], ignore_index=True)
 print(df_exel)
 
 # Salvando arquivo .CSV
-df_exel.to_csv("RelatórioFinal.csv", index=False)
-print("Arquivo CSV Salvo com sucesso!")
+# df_exel.to_csv("RelatórioFinal.csv", index=False)
+# print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
 with pd.ExcelWriter(Excel, engine='xlsxwriter') as writer:
     df_exel.to_excel(writer, index=False)
+    df_exel.to_csv(writer, index=False)
+    
     workbook = writer.book
     worksheet = writer.sheets['Sheet1']  # Mude 'Sheet1' para o nome da sua planilha, se necessário
 
