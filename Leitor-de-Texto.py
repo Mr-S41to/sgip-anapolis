@@ -194,11 +194,16 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
 # Concatenando todos os DataFrames na lista em um único DataFrame
 df_final = pd.concat(dfs, ignore_index=True)
 
+df_data = pd.read_csv("./data.csv")
+
+data = df_data[~df_data['Inscrição'].isin(df_final['Inscrição'])]
+
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
 total_juros = df_final["Juros"].sum()
 total_valor_atual = df_final["Valor Atual"].sum()
 
+df_final = pd.concat([df_final, data], ignore_index=True)
 resultados = {
     "Inscrição": "R$:",
     "Quadra": "",
@@ -230,8 +235,9 @@ print("Arquivo CSV Salvo com sucesso!")
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
 with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
-    df_exel.to_excel(writer, index=False)
-
+    df_final.to_excel(writer, index=False)
+    print("Arquivo Exel Salvo com sucesso!")
+    
     workbook = writer.book
     worksheet = writer.sheets[
         "Sheet1"
@@ -242,7 +248,7 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
 
     bold_format = workbook.add_format({"bold": True})
 
-    for row_num in range(1, len(df_exel) + 1):
+    for row_num in range(1, len(df_final) + 1):
         if row_num % 2 == 0:
             worksheet.set_row(row_num, cell_format=blue_format)
         else:
@@ -259,5 +265,3 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     worksheet.set_column("H:H", 14)
     worksheet.set_column("I:L", 12)
     worksheet.set_column("M:N", 8)
-
-print("Arquivo Excel Salvo com sucesso!")
