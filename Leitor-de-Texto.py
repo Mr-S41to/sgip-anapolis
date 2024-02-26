@@ -156,7 +156,7 @@ def processamento_dividas(PDF):
     return imoveis
 
 
-PDF = "110.pdf"
+PDF = "sample.pdf"
 imoveis_resultados = processamento_dividas(PDF)
 
 # Depuração de resultados.
@@ -184,15 +184,7 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
                 "Multa",
                 "Total Divida",
                 "Vencidas",
-                "A Vencer",
-                "ENDERECO",
-                "QUADRA",
-                "LOTE",
-                "AREA_LOTE",
-                "AREA_UNIDADE",
-                "TESTADA_M",
-                "OCUPACAO",
-                "STATUS",
+                "A Vencer"
             ],
         )
 
@@ -206,34 +198,26 @@ df_final = pd.concat(dfs, ignore_index=True)
 df_csv = pd.read_csv("data.csv", delimiter=";")
 
 # Iterar sobre as linhas do DataFrame do arquivo CSV
-if isinstance(df_final, pd.DataFrame):
+if isinstance(df_final, pd.DataFrame) and isinstance(df_csv, pd.DataFrame):
     # Iterar sobre as linhas do DataFrame do arquivo CSV
     for index, row in df_csv.iterrows():
-        # Verificar se o número de inscrição imobiliária já existe no DataFrame existente
-        if row["INSCRICAO_IMOBILIARIA"] in df_final["Inscrição"].values:
-            # Se existir, encontrar a linha correspondente no DataFrame existente
-            idx = df_final.loc[df_final["Inscrição"] == row['INSCRICAO_IMOBILIARIA']].index[0]
+        # Encontrar índices onde a Inscrição do df_final corresponde à INSCRICAO_IMOBILIARIA do df_csv
+        matching_indices = df_final[df_final["Inscrição"] == row['INSCRICAO_IMOBILIARIA']].index
+        
+        # Iterar sobre os índices encontrados
+        for idx in matching_indices:
             # Adicionar os dados ausentes ao DataFrame existente
-            df_final.at[idx, 'CONTRIBUINTE'] = row['CONTRIBUINTE']
-            df_final.at[idx, 'ENDERECO'] = row['ENDERECO']
-            df_final.at[idx, 'QUADRA'] = row['QUADRA']
-            df_final.at[idx, 'LOTE'] = row['LOTE']
-            df_final.at[idx, 'AREA_LOTE'] = row['AREA_LOTE']
-            df_final.at[idx, 'AREA_UNIDADE'] = row['AREA_UNIDADE']
+            df_final.at[idx, 'Contribuinte'] = row['CONTRIBUINTE']
+            # df_final.at[idx, 'ENDERECO'] = row['ENDERECO']
+            # df_final.at[idx, 'QUADRA'] = row['QUADRA']
+            # df_final.at[idx, 'LOTE'] = row['LOTE']
+            df_final.at[idx, 'Área do Lote'] = row['AREA_LOTE']
+            df_final.at[idx, 'Área da Unidade'] = row['AREA_UNIDADE']
             df_final.at[idx, 'TESTADA_M'] = row['TESTADA_M']
-            df_final.at[idx, 'OCUPACAO'] = row['OCUPACAO']
-            df_final.at[idx, 'SITUACAO'] = row['SITUACAO']
-        else:
-            # Create a new DataFrame with the row data from df_csv
-            new_row = pd.DataFrame([row])
-            # Append the new row to df_final
-            df_final = pd.concat([df_final, new_row], ignore_index=True)
+            df_final.at[idx, 'Oupação'] = row['OCUPACAO']
+            df_final.at[idx, 'Status'] = row['SITUACAO']
 else:
-    # Create a new DataFrame with the columns from df_csv
-    df_final = df_csv.copy()
-    # Add null values for the additional columns
-    for column in ["CONTRIBUINTE", "QUADRA", "LOTE", "AREA_LOTE", "AREA_UNIDADE", "TESTADA_M", "OCUPACAO", "SITUACAO"]:
-        df_final[column] = "--"
+    print("df_final e df_csv devem ser DataFrames do pandas.")
         
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
