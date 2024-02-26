@@ -2,7 +2,6 @@ from PyPDF2 import PdfReader
 import re
 import pandas as pd
 
-
 def processamento_dividas(PDF):
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
@@ -71,9 +70,9 @@ def processamento_dividas(PDF):
             correspondencia_lote = padrao_lote.findall(endereco)
 
             quadra = (
-                correspondencia_quadra[0].strip() if correspondencia_quadra else "--"
+                correspondencia_quadra[0].strip() if correspondencia_quadra else ""
             )
-            lote = correspondencia_lote[0].strip() if correspondencia_lote else "--"
+            lote = correspondencia_lote[0].strip() if correspondencia_lote else ""
 
             # print(quadra, lote)
 
@@ -194,6 +193,8 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
 # Concatenando todos os DataFrames na lista em um único DataFrame
 df_final = pd.concat(dfs, ignore_index=True)
 
+print(df_final)
+
 # Ler o arquivo CSV
 df_csv = pd.read_csv("data.csv", delimiter=";")
 
@@ -211,11 +212,11 @@ if isinstance(df_final, pd.DataFrame) and isinstance(df_csv, pd.DataFrame):
             # df_final.at[idx, 'ENDERECO'] = row['ENDERECO']
             # df_final.at[idx, 'QUADRA'] = row['QUADRA']
             # df_final.at[idx, 'LOTE'] = row['LOTE']
-            df_final.at[idx, 'Área do Lote'] = row['AREA_LOTE']
-            df_final.at[idx, 'Área da Unidade'] = row['AREA_UNIDADE']
+            df_final.at[idx, 'Área Lt'] = row['AREA_LOTE']
+            df_final.at[idx, 'Área Un'] = row['AREA_UNIDADE']
             df_final.at[idx, 'TESTADA_M'] = row['TESTADA_M']
             df_final.at[idx, 'Oupação'] = row['OCUPACAO']
-            df_final.at[idx, 'Status'] = row['SITUACAO']
+            df_final.at[idx, 'Status Imóvel'] = row['SITUACAO']
 else:
     print("df_final e df_csv devem ser DataFrames do pandas.")
         
@@ -239,6 +240,11 @@ resultados = {
     "Total Divida": total_divida,
     "Vencidas": "",
     "A Vencer": "",
+    "Área Lt": "",
+    "Área Un": "",
+    "TESTADA_M": "",
+    "Oupação": "",
+    "Status Imóvel": ""
 }
 
 df_total = pd.DataFrame([resultados])
@@ -255,7 +261,7 @@ print("Arquivo CSV Salvo com sucesso!")
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
 with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
-    df_final.to_excel(writer, index=False)
+    df_exel.to_excel(writer, index=False)
     print("Arquivo Exel Salvo com sucesso!")
     
     workbook = writer.book
@@ -285,3 +291,5 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     worksheet.set_column("H:H", 14)
     worksheet.set_column("I:L", 12)
     worksheet.set_column("M:N", 8)
+    worksheet.set_column("O:O", 28)
+    worksheet.set_column("T:T", 12)

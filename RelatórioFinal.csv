@@ -1,8 +1,8 @@
-Inscrição,Quadra,Lote,Origem,Tributo,Ano,Mês,Situação,Valor Atual,Juros,Multa,Total Divida,Vencidas,A Vencer,Contribuinte,Área do Lote,Área da Unidade,TESTADA_M,Oupação,Status
-406.759.0708.000,--,--,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,,,,,,
-406.759.0708.000,--,--,Imóvel,ITU,2024,01,Dívida Corrente,13554.88,0.0,0.0,13554.88,0,8,,,,,,
-406.759.0708.000,--,--,Imóvel,CIP - DA,2023,01,Dívida Ativa,27.77,2.78,5.55,36.1,1,0,,,,,,
-406.759.0708.000,--,--,Imóvel,ITU - DA,2023,01,Dívida Ativa,13554.88,1355.49,2710.98,17621.35,1,0,,,,,,
+Inscrição,Quadra,Lote,Origem,Tributo,Ano,Mês,Situação,Valor Atual,Juros,Multa,Total Divida,Vencidas,A Vencer,Contribuinte,Área Lt,Área Un,TESTADA_M,Oupação,Status Imóvel
+406.759.0708.000,,,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,,,,,,
+406.759.0708.000,,,Imóvel,ITU,2024,01,Dívida Corrente,13554.88,0.0,0.0,13554.88,0,8,,,,,,
+406.759.0708.000,,,Imóvel,CIP - DA,2023,01,Dívida Ativa,27.77,2.78,5.55,36.1,1,0,,,,,,
+406.759.0708.000,,,Imóvel,ITU - DA,2023,01,Dívida Ativa,13554.88,1355.49,2710.98,17621.35,1,0,,,,,,
 406.800.0040.000,01,01,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"365,51",0.0,"40,02",Vago,Ativo
 406.800.0040.000,01,01,Imóvel,ITU,2024,01,Dívida Corrente,1024.1,0.0,0.0,1024.1,0,7,SPE RESIDENCIAL BELEM LTDA,"365,51",0.0,"40,02",Vago,Ativo
 406.800.0054.000,01,02,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"314,14",0.0,"7,82",Vago,Ativo
@@ -215,22 +215,22 @@ Inscrição,Quadra,Lote,Origem,Tributo,Ano,Mês,Situação,Valor Atual,Juros,Mul
 406.803.0403.000,04,26,Imóvel,ITU,2024,01,Dívida Corrente,704.44,0.0,0.0,704.44,0,4,SPE RESIDENCIAL BELEM LTDA,"301,7",0.0,"14,18",Vago,Ativo
 406.803.0437.000,04,27,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"353,34",0.0,"15,83",Vago,Ativo
 406.803.0437.000,04,27,Imóvel,ITU,2024,01,Dívida Corrente,990.01,0.0,0.0,990.01,0,7,SPE RESIDENCIAL BELEM LTDA,"353,34",0.0,"15,83",Vago,Ativo
-406.805.0149.000,--,--,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"10572,53",0.0,"128,42",Vago,Ativo
-406.805.0149.000,--,--,Imóvel,ITU,2024,01,Dívida Corrente,20735.52,0.0,0.0,20735.52,0,8,SPE RESIDENCIAL BELEM LTDA,"10572,53",0.0,"128,42",Vago,Ativo
-406.805.0439.000,--,--,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"12579,64",0.0,"170,41",Vago,Ativo
-406.805.0439.000,--,--,Imóvel,ITU,2024,01,Dívida Corrente,20560.0,0.0,0.0,20560.0,0,8,SPE RESIDENCIAL BELEM LTDA,"12579,64",0.0,"170,41",Vago,Ativo
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,59.16,0.0,0.0,59.16,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,32.51,0.0,0.0,32.51,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,34.8,0.0,0.0,34.8,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,786.4,0.0,0.0,786.4,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,214.85,0.0,0.0,214.85,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,33.64,0.0,0.0,33.64,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,27.14,0.0,0.0,27.14,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,103.93,0.0,0.0,103.93,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,51.0,0.0,0.0,51.0,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,27.23,0.0,0.0,27.23,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,3.0,0.0,0.0,3.0,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,0.75,0.0,0.0,0.75,0,1,,,,,,
-76225,--,--,Inscrição ISS,Tx Fisc Func Re,2024,01,Dívida Corrente,62.4,0.0,0.0,62.4,0,1,,,,,,
-76225,--,--,Inscrição ISS,ISS Elet Ret DA,2023,04,Dívida Ativa,211.12,19.0,4.22,234.34,1,0,,,,,,
+406.805.0149.000,,,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"10572,53",0.0,"128,42",Vago,Ativo
+406.805.0149.000,,,Imóvel,ITU,2024,01,Dívida Corrente,20735.52,0.0,0.0,20735.52,0,8,SPE RESIDENCIAL BELEM LTDA,"10572,53",0.0,"128,42",Vago,Ativo
+406.805.0439.000,,,Imóvel,CIP,2024,01,Dívida Corrente,26.52,0.0,0.0,26.52,0,1,SPE RESIDENCIAL BELEM LTDA,"12579,64",0.0,"170,41",Vago,Ativo
+406.805.0439.000,,,Imóvel,ITU,2024,01,Dívida Corrente,20560.0,0.0,0.0,20560.0,0,8,SPE RESIDENCIAL BELEM LTDA,"12579,64",0.0,"170,41",Vago,Ativo
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,59.16,0.0,0.0,59.16,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,32.51,0.0,0.0,32.51,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,34.8,0.0,0.0,34.8,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,786.4,0.0,0.0,786.4,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,214.85,0.0,0.0,214.85,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,33.64,0.0,0.0,33.64,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,27.14,0.0,0.0,27.14,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,103.93,0.0,0.0,103.93,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,51.0,0.0,0.0,51.0,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,27.23,0.0,0.0,27.23,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,3.0,0.0,0.0,3.0,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Retido,2024,02,Dívida Corrente,0.75,0.0,0.0,0.75,0,1,,,,,,
+76225,,,Inscrição ISS,Tx Fisc Func Re,2024,01,Dívida Corrente,62.4,0.0,0.0,62.4,0,1,,,,,,
+76225,,,Inscrição ISS,ISS Elet Ret DA,2023,04,Dívida Ativa,211.12,19.0,4.22,234.34,1,0,,,,,,
 R$:,,,,,,JUROS:,1377.27,      MULTA:,2720.75,      GERAL:,156620.00999999998,,,,,,,,
