@@ -2,7 +2,6 @@ from PyPDF2 import PdfReader
 import re
 import pandas as pd
 
-
 def processamento_dividas(PDF):
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
