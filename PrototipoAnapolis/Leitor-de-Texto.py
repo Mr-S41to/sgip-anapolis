@@ -20,6 +20,7 @@ def processamento_dividas(PDF):
             # Debugging de leitura de arquivo.
             print(text)
 
+        #Formatando e eliminando sobras desnecessárias
         text = re.sub(r"\.(\s*\.)+", "\n", text)
         text = re.sub(
             r"ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER",
@@ -27,11 +28,9 @@ def processamento_dividas(PDF):
             text,
         )
         text = re.sub(r"^.*TOTAL:$", "\n", text, flags=re.MULTILINE)
-        # text = re.sub(r'^TOTAL ORIGEM:.*$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r"^.*ANÁPOLIS$", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"^Página.*$", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"^Data:.*$", "\n", text, flags=re.MULTILINE)
-        # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
         text = re.sub(r",\s(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
         text = re.sub(r";\s(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"\d(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
@@ -40,6 +39,7 @@ def processamento_dividas(PDF):
         text = re.sub(r"(Endereço:)", r"\n\n\1", text)
         text = re.sub(r"(Total Dívida Corrente:)", r"\n\n\1", text)
 
+        #Padronizando leitura de textos para extração de variaveis de identificação.
         padrao_origem = re.compile(r"Inscrição:\s(.+?)\sOrigem:")
         padrao_inscricao = re.compile(r"\n(.+?)\s*Inscrição:")
         padrao_endereco = re.compile(r"Endereço:\s*(.+?)\n")
@@ -162,8 +162,6 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
             divida["Divida"],
             columns=[
                 "Inscrição",
-                # "Quadra",
-                # "Lote",
                 "Origem",
                 "Tributo",
                 "Ano",
@@ -216,8 +214,6 @@ total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
     "Inscrição": "R$:",
-    # "Quadra": "",
-    # "Lote": "",
     "Origem": "",
     "Tributo": "",
     "Ano": "",
@@ -272,12 +268,11 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
             worksheet.set_row(row_num, cell_format=bold_format)
 
     worksheet.set_column("A:A", 16)  # Define a largura da coluna 'A' para 15
-    worksheet.set_column("B:C", 6)
-    worksheet.set_column("D:D", 12)
-    worksheet.set_column("E:E", 14)
-    worksheet.set_column("F:G", 6)
-    worksheet.set_column("H:H", 14)
-    worksheet.set_column("I:L", 12)
-    worksheet.set_column("M:N", 8)
-    worksheet.set_column("O:O", 28)
-    worksheet.set_column("T:T", 12)
+    # worksheet.set_column("B:C", 10)
+    worksheet.set_column("B:B", 12)
+    worksheet.set_column("C:C", 14)
+    worksheet.set_column("D:E", 6)
+    worksheet.set_column("F:F", 14)
+    worksheet.set_column("G:L", 12)
+    worksheet.set_column("M:M", 28)
+    worksheet.set_column("P:R", 12)
