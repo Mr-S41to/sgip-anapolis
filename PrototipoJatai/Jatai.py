@@ -17,38 +17,41 @@ def processamento_dividas(PDF):
             text += pagina.extract_text()
             # Debugging de leitura de arquivo.
             print(text)
-    
+
     text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"^\s\sImpresso.*$", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"PREFEITURA\sMUNICIPAL\sDE\sJATAÍ", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"Rua\sItarumã,.*$", "\n", text, flags=re.MULTILINE)
+    text = re.sub(r"\sGO,(.+?)PE", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"ADC:(.+?)\n\n", "----------", text, flags=re.DOTALL)
-    text = re.sub(r"(\d+)(?:\n\n)", "----------", text, flags=re.DOTALL)
+    # text = re.sub(r"(\d+)(?:\n\n)", "----------", text, flags=re.DOTALL)
     text = re.sub(r"\n+", "\n", text)
-    text = re.sub(r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE)
+    text = re.sub(
+        r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE
+    )
     print("Texto formatado:\n", text)
 
     padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)----------", re.DOTALL)
     correspondencia_data = padrao_data
 
     ocorrencias_dividas = correspondencia_data.findall(text)
-
+   
     i = 0
-    for ocorrencia_divida in ocorrencias_dividas:
+    for ocorrencia_divida in ocorrencias_dividas: 
         i += 1
-        print(f"{i} - Dívida encontrada.")
-        
-        padrao_inscricao = re.compile(r"Residencial\s(.+?)\n", re.DOTALL)
-        correspondencia_incricao = padrao_inscricao.search(ocorrencia_divida)
+        print(f"\n{i} - Dívida encontrada.")
 
-        if correspondencia_incricao:
-            inscricao = correspondencia_incricao.group(1)
-            print("Número de inscrição:", inscricao)
-        else:
-            inscricao = None
-            print("Número de inscrição não encontrado.")
-        
+        # padrao_inscricao = re.compile(r"Residencial\s(.+?)\n", re.DOTALL)
+        # correspondencia_incricao = padrao_inscricao.search(ocorrencia_divida)
+
+        # if correspondencia_incricao:
+        #     inscricao = correspondencia_incricao.group(1)
+        #     print("Número de inscrição:", inscricao)
+        # else:
+        #     inscricao = None
+        #     print("Número de inscrição não encontrado.")
+
         padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
         correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
 
@@ -68,8 +71,8 @@ def processamento_dividas(PDF):
         else:
             local = None
             print("Local não encontrado.")
-        
-        padrao_quadra = re.compile(r"Qd\.:\s+(\d+),", re.DOTALL)
+
+        padrao_quadra = re.compile(r"QD\.:\s+(\d+),", re.DOTALL)
         correspondencia_quadra = padrao_quadra.search(ocorrencia_divida)
 
         if correspondencia_quadra:
@@ -107,7 +110,46 @@ def processamento_dividas(PDF):
             print("Cidade:", cidade)
         else:
             cidade = None
-            print("Cidade não encontrada.")    
+            print("Cidade não encontrada.")
+        
+        data_dividas = re.findall(r'PE.*?\w\s-\s\d+', ocorrencia_divida, re.DOTALL)
+        # Junte as partes correspondentes encontradas
+        # data_dividas = '\n'.join(data_dividas)
+        print(data_dividas)
+
+        divida = []
+        total_dividas = 0
+        for linha in data_dividas:
+            # Dividir a linha pelos espaços em branco
+            valores = linha.split()
+            
+            # Atribuir os valores a variáveis
+            status = valores[0]
+            parcela = valores[1]
+            porcentagem = valores[2]
+            variavel4 = valores[3]
+            multa = valores[4]
+            variavel6 = valores[5]
+            total = valores[6]
+            valor_tributo = valores[7]
+            variavel9 = valores[8]
+            vencimento = valores[9]
+            tributo = valores[10]
+            base = valores[11]
+            correcao = valores[12]
+            juros = valores[13]
+            debito = valores[14]
+            ref = valores[15]
+            desconto = valores[16]
+            
+            # Exibir os valores
+            print(f"\nVariáveis: Débito: {debito}, Tributo: {tributo}, Status: {status}, Ref.: {ref}, Parcela: {parcela}, Base: {base}, Porcentagem: {porcentagem}, Juros: {juros}, Multa: {multa}, Correção: {correcao}, Valor Tributo: {valor_tributo}, Desconto: {desconto}, Total: {total}, Vencimento: {vencimento}")
+            print(f"Variável 4: {variavel4}")
+            print(f"Variável 6: {variavel6}")
+            print(f"Variável 9: {variavel9}")
+
+
+    return imoveis
 
 PDF = "sample.pdf"
 imoveis_resultados = processamento_dividas(PDF)

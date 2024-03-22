@@ -162,6 +162,8 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
             divida["Divida"],
             columns=[
                 "Inscrição",
+                "Quadra",
+                "Lote",
                 "Origem",
                 "Tributo",
                 "Ano",
@@ -184,29 +186,6 @@ df_final = pd.concat(dfs, ignore_index=True)
 
 print(df_final)
 
-# Ler o arquivo CSV
-df_csv = pd.read_csv("data.csv", delimiter=";")
-
-# Iterar sobre as linhas do DataFrame do arquivo CSV
-if isinstance(df_final, pd.DataFrame) and isinstance(df_csv, pd.DataFrame):
-    # Iterar sobre as linhas do DataFrame do arquivo CSV
-    for index, row in df_csv.iterrows():
-        # Encontrar índices onde a Inscrição do df_final corresponde à INSCRICAO_IMOBILIARIA do df_csv
-        matching_indices = df_final[
-            df_final["Inscrição"] == row["INSCRICAO_IMOBILIARIA"]
-        ].index
-
-        # Iterar sobre os índices encontrados
-        for idx in matching_indices:
-            df_final.at[idx, "Contribuinte"] = row["CONTRIBUINTE"]
-            df_final.at[idx, "Área Lt"] = row["AREA_LOTE"]
-            df_final.at[idx, "Área Un"] = row["AREA_UNIDADE"]
-            df_final.at[idx, "TESTADA_M"] = row["TESTADA_M"]
-            df_final.at[idx, "Oupação"] = row["OCUPACAO"]
-            df_final.at[idx, "Status Imóvel"] = row["SITUACAO"]
-else:
-    print("df_final e df_csv devem ser DataFrames do pandas.")
-
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
 total_juros = df_final["Juros"].sum()
@@ -214,6 +193,8 @@ total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
     "Inscrição": "R$:",
+    "Quadra": "",
+    "Lote": "",
     "Origem": "",
     "Tributo": "",
     "Ano": "",
@@ -268,11 +249,12 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
             worksheet.set_row(row_num, cell_format=bold_format)
 
     worksheet.set_column("A:A", 16)  # Define a largura da coluna 'A' para 15
-    # worksheet.set_column("B:C", 10)
-    worksheet.set_column("B:B", 12)
-    worksheet.set_column("C:C", 14)
-    worksheet.set_column("D:E", 6)
-    worksheet.set_column("F:F", 14)
-    worksheet.set_column("G:L", 12)
-    worksheet.set_column("M:M", 28)
-    worksheet.set_column("P:R", 12)
+    worksheet.set_column("B:C", 6)
+    worksheet.set_column("D:D", 12)
+    worksheet.set_column("E:E", 14)
+    worksheet.set_column("F:G", 6)
+    worksheet.set_column("H:H", 14)
+    worksheet.set_column("I:L", 12)
+    worksheet.set_column("M:N", 8)
+    worksheet.set_column("O:O", 28)
+    worksheet.set_column("T:T", 12)
