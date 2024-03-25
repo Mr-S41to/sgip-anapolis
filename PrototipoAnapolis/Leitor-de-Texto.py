@@ -20,7 +20,7 @@ def processamento_dividas(PDF):
             # Debugging de leitura de arquivo.
             print(text)
 
-        #Formatando e eliminando sobras desnecessárias
+        # Formatando e eliminando sobras desnecessárias
         text = re.sub(r"\.(\s*\.)+", "\n", text)
         text = re.sub(
             r"ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER",
@@ -39,7 +39,7 @@ def processamento_dividas(PDF):
         text = re.sub(r"(Endereço:)", r"\n\n\1", text)
         text = re.sub(r"(Total Dívida Corrente:)", r"\n\n\1", text)
 
-        #Padronizando leitura de textos para extração de variaveis de identificação.
+        # Padronizando leitura de textos para extração de variaveis de identificação.
         padrao_origem = re.compile(r"Inscrição:\s(.+?)\sOrigem:")
         padrao_inscricao = re.compile(r"\n(.+?)\s*Inscrição:")
         padrao_endereco = re.compile(r"Endereço:\s*(.+?)\n")
@@ -206,11 +206,11 @@ resultados = {
     "Total Divida": total_divida,
     "Vencidas": "",
     "A Vencer": "",
-    "Área Lt": "",
-    "Área Un": "",
-    "TESTADA_M": "",
-    "Oupação": "",
-    "Status Imóvel": "",
+    # "Área Lt": "",
+    # "Área Un": "",
+    # "TESTADA_M": "",
+    # "Oupação": "",
+    # "Status Imóvel": ""
 }
 
 df_total = pd.DataFrame([resultados])

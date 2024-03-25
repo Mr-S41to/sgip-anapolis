@@ -1,5 +1,7 @@
 from PyPDF2 import PdfReader
 import re
+import pandas as pd
+
 
 def processamento_dividas(PDF):
     # Abrir pedef em Binários.
@@ -18,138 +20,272 @@ def processamento_dividas(PDF):
             # Debugging de leitura de arquivo.
             print(text)
 
-    text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"^\s\sImpresso.*$", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"PREFEITURA\sMUNICIPAL\sDE\sJATAÍ", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"Rua\sItarumã,.*$", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"\sGO,(.+?)PE", "\n", text, flags=re.MULTILINE)
-    text = re.sub(r"ADC:(.+?)\n\n", "----------", text, flags=re.DOTALL)
-    # text = re.sub(r"(\d+)(?:\n\n)", "----------", text, flags=re.DOTALL)
-    text = re.sub(r"\n+", "\n", text)
-    text = re.sub(
-        r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE
-    )
-    print("Texto formatado:\n", text)
+            text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"^\s\sImpresso.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"^Débito.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"^Ramo.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"^Endereço:.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(
+                r"PREFEITURA\sMUNICIPAL\sDE\sJATAÍ", "\n", text, flags=re.MULTILINE
+            )
+            text = re.sub(
+                r"MUNICÍPIO\sDE\sJATAÍ\s-\sESTADO\sDE\sGOIÁS",
+                "\n",
+                text,
+                flags=re.MULTILINE,
+            )
+            text = re.sub(r"Rua\sItarumã,.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r",\sCIDADE:(.+?)\nPE", "\nPE", text, flags=re.MULTILINE)
+            text = re.sub(r",\sJATAÍ:(.+?)\nPE", "\nPE", text, flags=re.MULTILINE)
+            text = re.sub(
+                r"\b(TX)\s+(EXP)\s+(ALV)\b", r"\1\2\3", text, flags=re.MULTILINE
+            )
+            text = re.sub(r"\b(ISS)\s+(RET)\b", r"\1\2", text, flags=re.MULTILINE)
+            text = re.sub(r"^Inicio\sAtividade:.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"^CORRETAGEM.*$", "\n", text, flags=re.MULTILINE)
+            text = re.sub(r"QD\.\:", "QD.", text, flags=re.MULTILINE)
+            text = re.sub(r"LT\.\:", "LT.", text, flags=re.MULTILINE)
+            text = re.sub(r"ADC:(.+?)\n\n", "----------", text, flags=re.DOTALL)
+            text = re.sub(r"\n+", "\n", text)
+            text = re.sub(
+                r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE
+            )
+            # print("Texto formatado:\n", text)
 
-    padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)----------", re.DOTALL)
-    correspondencia_data = padrao_data
+            padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)----------", re.DOTALL)
+            correspondencia_data = padrao_data
 
-    ocorrencias_dividas = correspondencia_data.findall(text)
-   
-    i = 0
-    for ocorrencia_divida in ocorrencias_dividas: 
-        i += 1
-        print(f"\n{i} - Dívida encontrada.")
+            ocorrencias_dividas = correspondencia_data.findall(text)
 
-        # padrao_inscricao = re.compile(r"Residencial\s(.+?)\n", re.DOTALL)
-        # correspondencia_incricao = padrao_inscricao.search(ocorrencia_divida)
+            # i = 0
+            for ocorrencia_divida in ocorrencias_dividas:
+                # i += 1
+                # print(f"\n{i} - Dívida encontrada.")
 
-        # if correspondencia_incricao:
-        #     inscricao = correspondencia_incricao.group(1)
-        #     print("Número de inscrição:", inscricao)
-        # else:
-        #     inscricao = None
-        #     print("Número de inscrição não encontrado.")
+                dividas = []
+                total_origem = 0
 
-        padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
-        correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
+                # padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
+                # correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
 
-        if correspondencia_incricao_cci:
-            inscricao_cci = correspondencia_incricao_cci.group(1)
-            print("Número de inscrição CCI:", inscricao_cci)
-        else:
-            inscricao_cci = None
-            print("Número de inscrição CCI não encontrado.")
+                # if correspondencia_incricao_cci:
+                #     inscricao_cci = correspondencia_incricao_cci.group(1)
+                #     print("Número de inscrição CCI:", inscricao_cci)
+                # else:
+                #     inscricao_cci = None
+                #     print("Número de inscrição CCI não encontrado.")
 
-        padrao_local = re.compile(r"Imóvel\n(.+?),", re.DOTALL)
-        correspondencia_local = padrao_local.search(ocorrencia_divida)
+                padrao_local = re.compile(r"\n(.+?),", re.DOTALL)
+                correspondencia_local = padrao_local.search(ocorrencia_divida)
 
-        if correspondencia_local:
-            local = correspondencia_local.group(1)
-            print("Local:", local)
-        else:
-            local = None
-            print("Local não encontrado.")
+                if correspondencia_local:
+                    local = correspondencia_local.group(1)
+                    # print("Local:", local)
+                else:
+                    local = None
+                    # print("Local não encontrado.")
 
-        padrao_quadra = re.compile(r"QD\.:\s+(\d+),", re.DOTALL)
-        correspondencia_quadra = padrao_quadra.search(ocorrencia_divida)
+                padrao_quadra = re.compile(r"QD.(.+?),", re.DOTALL)
+                correspondencia_quadra = padrao_quadra.search(ocorrencia_divida)
 
-        if correspondencia_quadra:
-            quadra = correspondencia_quadra.group(1)
-            print("Número da quadra:", quadra)
-        else:
-            quadra = None
-            print("Número da quadra não encontrado.")
+                if correspondencia_quadra:
+                    quadra = correspondencia_quadra.group(1)
+                    # print("Número da quadra:", quadra)
+                else:
+                    quadra = None
+                    # print("Número da quadra não encontrado.")
 
-        padrao_lote = re.compile(r"Lt\.:\s+(\d+),", re.DOTALL)
-        correspondencia_lote = padrao_lote.search(ocorrencia_divida)
+                padrao_lote = re.compile(r"LT.(.+?),", re.DOTALL)
+                correspondencia_lote = padrao_lote.search(ocorrencia_divida)
 
-        if correspondencia_lote:
-            lote = correspondencia_lote.group(1)
-            print("Número do lote:", lote)
-        else:
-            lote = None
-            print("Número do lote não encontrado.")
+                if correspondencia_lote:
+                    lote = correspondencia_lote.group(1)
+                    # print("Número do lote:", lote)
+                else:
+                    lote = None
+                    # print("Número do lote não encontrado.")
 
-        padrao_bairro = re.compile(r"BAIRRO:\s(.+?),", re.DOTALL)
-        correspondencia_bairro = padrao_bairro.search(ocorrencia_divida)
+                padrao_bairro = re.compile(r"BAIRRO:\s(.+?),", re.DOTALL)
+                correspondencia_bairro = padrao_bairro.search(ocorrencia_divida)
 
-        if correspondencia_bairro:
-            bairro = correspondencia_bairro.group(1)
-            print("Bairro:", bairro)
-        else:
-            bairro = None
-            print("Bairro não encontrado.")
+                if correspondencia_bairro:
+                    bairro = correspondencia_bairro.group(1)
+                    # print("Bairro:", bairro)
+                else:
+                    bairro = None
+                    # print("Bairro não encontrado.")
 
-        padrao_cidade = re.compile(r"CIDADE:\s(.+?),", re.DOTALL)
-        correspondencia_cidade = padrao_cidade.search(ocorrencia_divida)
+                padrao_cidade = re.compile(r"CIDADE:\s(.+?),", re.DOTALL)
+                correspondencia_cidade = padrao_cidade.search(ocorrencia_divida)
 
-        if correspondencia_cidade:
-            cidade = correspondencia_cidade.group(1)
-            print("Cidade:", cidade)
-        else:
-            cidade = None
-            print("Cidade não encontrada.")
-        
-        data_dividas = re.findall(r'PE.*?\w\s-\s\d+', ocorrencia_divida, re.DOTALL)
-        # Junte as partes correspondentes encontradas
-        # data_dividas = '\n'.join(data_dividas)
-        print(data_dividas)
+                if correspondencia_cidade:
+                    cidade = correspondencia_cidade.group(1)
+                    # print("Cidade:", cidade)
+                else:
+                    cidade = None
+                    # print("Cidade não encontrada.")
 
-        divida = []
-        total_dividas = 0
-        for linha in data_dividas:
-            # Dividir a linha pelos espaços em branco
-            valores = linha.split()
-            
-            # Atribuir os valores a variáveis
-            status = valores[0]
-            parcela = valores[1]
-            porcentagem = valores[2]
-            variavel4 = valores[3]
-            multa = valores[4]
-            variavel6 = valores[5]
-            total = valores[6]
-            valor_tributo = valores[7]
-            variavel9 = valores[8]
-            vencimento = valores[9]
-            tributo = valores[10]
-            base = valores[11]
-            correcao = valores[12]
-            juros = valores[13]
-            debito = valores[14]
-            ref = valores[15]
-            desconto = valores[16]
-            
-            # Exibir os valores
-            print(f"\nVariáveis: Débito: {debito}, Tributo: {tributo}, Status: {status}, Ref.: {ref}, Parcela: {parcela}, Base: {base}, Porcentagem: {porcentagem}, Juros: {juros}, Multa: {multa}, Correção: {correcao}, Valor Tributo: {valor_tributo}, Desconto: {desconto}, Total: {total}, Vencimento: {vencimento}")
-            print(f"Variável 4: {variavel4}")
-            print(f"Variável 6: {variavel6}")
-            print(f"Variável 9: {variavel9}")
+                data_dividas = re.findall(
+                    r"PE.*?\w\s-\s\d+", ocorrencia_divida, re.DOTALL
+                )
+                # data_dividas = '\n'.join(data_dividas)
 
+                for linha in data_dividas:
+                    total_dividas = 0
+
+                    padrao_cod = re.findall(r"\w\s-\s\d+", linha, re.DOTALL)
+                    correspondencia_cod = padrao_cod[0] if padrao_cod else None
+                    inscricao = correspondencia_cod
+                    # Dividir a linha pelos espaços em branco
+                    valores = linha.split()
+
+                    status = valores[0]
+                    parcela = valores[1]
+                    porcentagem = valores[2]
+                    variavel4 = valores[3]
+                    multa = valores[4]
+                    variavel6 = valores[5]
+                    total = valores[6]
+                    valor_tributo = valores[7]
+                    variavel9 = valores[8]
+                    vencimento = valores[9]
+                    tributo = valores[10]
+                    base = valores[11]
+                    correcao = valores[12]
+                    juros = valores[13]
+                    debito = valores[14]
+                    ref = valores[15]
+                    desconto = valores[16]
+
+                    valor_tributo = valor_tributo.replace(".", "").replace(",", ".")
+                    base = base.replace(".", "").replace(",", ".")
+                    juros = juros.replace(".", "").replace(",", ".")
+                    multa = multa.replace(".", "").replace(",", ".")
+                    total = total.replace(".", "").replace(",", ".")
+                    correcao = correcao.replace(".", "").replace(",", ".")
+
+                    valor_tributo, base, juros, multa, total, correcao, desconto = map(
+                        float,
+                        [valor_tributo, base, juros, multa, total, correcao, desconto],
+                    )
+
+                    inscricao = re.sub(r"[A-Za-z\s-]", "", inscricao)
+
+                    # Exibir os valores
+                    # print(
+                    #     f"\nVariáveis: Débito: {debito}, Tributo: {tributo}, Status: {status}, Ref.: {ref}, Parcela: {parcela}, Base: {base}, Porcentagem: {porcentagem}, Juros: {juros}, Multa: {multa}, Correção: {correcao}, Valor Tributo: {valor_tributo}, Desconto: {desconto}, Total: {total}, Vencimento: {vencimento}"
+                    # )
+                    # print(
+                    #     f"Variáveis não identificadas: {variavel4}, {variavel6}, {variavel9}"
+                    # )
+
+                    divida = {
+                        "Inscrição": inscricao,
+                        "Local": local,
+                        "Quadra": quadra,
+                        "Lote": lote,
+                        "Status": status,
+                        "Parcela": parcela,
+                        "Porcentagem": porcentagem,
+                        "Multa": multa,
+                        "Total": total,
+                        "Valor Tributo": valor_tributo,
+                        "Vencimento": vencimento,
+                        "Tributo": tributo,
+                        "Base": base,
+                        "Correção": correcao,                        "Juros": juros,
+                        "Débito": debito,
+                        "Ref": ref,
+                        "Desconto": desconto,
+                    }
+                    dividas.append(divida)
+
+                imovel = {
+                    "Dividas": dividas,
+                    # "Inscrição": inscricao_cci,
+                    # "Local": local,
+                    # "Quadra": quadra,
+                    # "Lote": lote,
+                    # "Bairro": bairro,
+                    # "Cidade": cidade
+                }
+                imoveis.append(imovel)
 
     return imoveis
 
+
 PDF = "sample.pdf"
 imoveis_resultados = processamento_dividas(PDF)
+# print(imoveis_resultados)
+dfs = []
+
+for i, imovel in enumerate(imoveis_resultados, start=1):
+    # inscricao_cci = imovel["Inscrição"]
+    dividas = imovel["Dividas"]
+
+    for divida in dividas:
+        df = pd.DataFrame(
+            [divida],
+            columns=[
+                "Inscrição",
+                # "Local",
+                "Quadra",
+                "Lote",
+                "Status",
+                "Tributo",
+                "Ref",
+                "Base",
+                "Valor Tributo",
+                "Parcela",
+                "Porcentagem",
+                "Juros",
+                "Multa",
+                "Correção",
+                "Desconto",
+                "Total",
+                "Vencimento",
+                # "Débito"
+            ],
+        )
+
+        dfs.append(df)
+
+df_final = pd.concat(dfs, ignore_index=True)
+print(df_final)
+
+df_exel = pd.DataFrame(df_final)
+
+df_exel.to_csv("RelatórioFinal.csv", index=False)
+print("Arquivo CSV Salvo com sucesso!")
+
+Excel = "RelatórioFinal.xlsx"
+with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
+    df_exel.to_excel(writer, index=False)
+    print("Arquivo Exel Salvo com sucesso!")
+
+    workbook = writer.book
+    worksheet = writer.sheets[
+        "Sheet1"
+    ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
+
+    blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
+    white_format = workbook.add_format({"bg_color": "#FEFEFE"})
+    bold_format = workbook.add_format({"bold": True})
+
+    for row_num in range(1, len(df_exel) + 1):
+        if row_num % 2 == 0:
+            worksheet.set_row(row_num, cell_format=blue_format)
+        else:
+            worksheet.set_row(row_num, cell_format=white_format)
+
+        if df_exel.iloc[row_num - 1]["Inscrição"] == "R$:":
+            worksheet.set_row(row_num, cell_format=bold_format)
+
+    worksheet.set_column("A:A", 10)
+    worksheet.set_column("B:D", 6)
+    worksheet.set_column("E:H", 12)
+    worksheet.set_column("I:I", 8)
+    worksheet.set_column("J:J", 12)
+    worksheet.set_column("K:O", 10)
+    worksheet.set_column("P:P", 12)

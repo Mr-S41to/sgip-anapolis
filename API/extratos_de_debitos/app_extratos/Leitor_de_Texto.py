@@ -182,7 +182,6 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
 
 # Concatenando todos os DataFrames na lista em um único DataFrame
 df_final = pd.concat(dfs, ignore_index=True)
-
 print(df_final)
 
 # Ler o arquivo CSV
