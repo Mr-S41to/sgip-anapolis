@@ -1,0 +1,11 @@
+Empresa,Empreendimento,Contrato,DataVenda,Cliente,Qd,Lt,Comp,Inscrição
+Empresa A,Empreendimento X,123ABC,2024-03-26,Cliente Y,A1,123,456,406.759.0708.000
+Empresa B,Empreendimento Y,456DEF,2024-03-27,Cliente Z,B2,789,101,406.800.0040.000
+Empresa C,Empreendimento Z,789GHI,2024-03-28,Cliente W,C3,111,121,406.800.0054.000
+Empresa D,Empreendimento W,101JKL,2024-03-29,Cliente X,D4,131,141,406.800.0066.000
+Empresa E,Empreendimento V,121MNO,2024-03-30,Cliente V,E5,151,161,406.800.0078.000
+Empresa F,Empreendimento U,141PQR,2024-03-31,Cliente U,F6,171,181,406.800.0090.000
+Empresa G,Empreendimento T,161STU,2024-04-01,Cliente T,G7,191,201,406.800.0102.000
+Empresa H,Empreendimento S,181VWX,2024-04-02,Cliente S,H8,211,221,406.800.0114.000
+Empresa I,Empreendimento R,202YZA,2024-04-03,Cliente R,I9,231,241,406.800.0126.000
+Empresa J,Empreendimento Q,222BCD,2024-04-04,Cliente Q,J10,251,261,406.800.0138.000

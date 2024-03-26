@@ -205,12 +205,7 @@ resultados = {
     "Multa": total_multa,
     "Total Divida": total_divida,
     "Vencidas": "",
-    "A Vencer": "",
-    # "Área Lt": "",
-    # "Área Un": "",
-    # "TESTADA_M": "",
-    # "Oupação": "",
-    # "Status Imóvel": ""
+    "A Vencer": ""
 }
 
 df_total = pd.DataFrame([resultados])
