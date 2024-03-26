@@ -16,9 +16,9 @@ def processamento_dividas(PDF):
         for num_pagina in range(num_paginas):
             pagina = reader_pdf.pages[num_pagina]
             # Extração do texto das paginas
-            text += pagina.extract_text()
+            text = pagina.extract_text()  # Limpa o texto anterior
             # Debugging de leitura de arquivo.
-            print(text)
+            # print(text)
 
             text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
@@ -46,15 +46,16 @@ def processamento_dividas(PDF):
             text = re.sub(r"^CORRETAGEM.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"QD\.\:", "QD.", text, flags=re.MULTILINE)
             text = re.sub(r"LT\.\:", "LT.", text, flags=re.MULTILINE)
-            text = re.sub(r"ADC:(.+?)\n\n", "----------", text, flags=re.DOTALL)
+            text = re.sub(r"ADC:(.+?)\n\n", "\n", text, flags=re.DOTALL)
             text = re.sub(r"\n+", "\n", text)
             text = re.sub(
                 r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE
             )
-            # print("Texto formatado:\n", text)
+            print("Texto formatado:\n", text)
 
-            padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)----------", re.DOTALL)
+            padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)(?=EXTRATO DE DÉBITO|$)", re.DOTALL)
             correspondencia_data = padrao_data
+
 
             ocorrencias_dividas = correspondencia_data.findall(text)
 
@@ -180,6 +181,7 @@ def processamento_dividas(PDF):
                     #     f"Variáveis não identificadas: {variavel4}, {variavel6}, {variavel9}"
                     # )
 
+                    total_dividas += float(total)
                     divida = {
                         "Inscrição": inscricao,
                         "Local": local,
@@ -189,26 +191,24 @@ def processamento_dividas(PDF):
                         "Parcela": parcela,
                         "Porcentagem": porcentagem,
                         "Multa": multa,
-                        "Total": total,
                         "Valor Tributo": valor_tributo,
                         "Vencimento": vencimento,
                         "Tributo": tributo,
                         "Base": base,
-                        "Correção": correcao,                        "Juros": juros,
+                        "Correção": correcao,
+                        "Juros": juros,
                         "Débito": debito,
                         "Ref": ref,
                         "Desconto": desconto,
+                        "Total Divida": total,
                     }
                     dividas.append(divida)
 
+                total_origem += float(total_dividas)
                 imovel = {
                     "Dividas": dividas,
-                    # "Inscrição": inscricao_cci,
-                    # "Local": local,
-                    # "Quadra": quadra,
-                    # "Lote": lote,
-                    # "Bairro": bairro,
-                    # "Cidade": cidade
+                    # "Inscrição": inscricao,
+                    "Total Origem": total_origem,
                 }
                 imoveis.append(imovel)
 
@@ -243,7 +243,7 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
                 "Multa",
                 "Correção",
                 "Desconto",
-                "Total",
+                "Total Divida",
                 "Vencimento",
                 # "Débito"
             ],
@@ -252,9 +252,41 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
         dfs.append(df)
 
 df_final = pd.concat(dfs, ignore_index=True)
-print(df_final)
 
-df_exel = pd.DataFrame(df_final)
+total_tributos = df_final["Valor Tributo"].sum()
+total_juros = df_final["Juros"].sum()
+total_multas = df_final["Multa"].sum()
+total_correcao = df_final["Correção"].sum()
+total_descontos = df_final["Desconto"].sum()
+total_dividas = df_final["Total Divida"].sum()
+total_base = df_final["Base"].sum()
+
+resultados = {
+    "Inscrição": "R$:",
+    # "Local",
+    "Quadra": "Totais",
+    "Lote": "",
+    "Status": "",
+    "Tributo": "",
+    "Ref": "",
+    "Base": total_base,
+    "Valor Tributo": total_tributos,
+    "Parcela": "",
+    "Porcentagem": "",
+    "Juros" : total_juros,
+    "Multa": total_multas,
+    "Correção": total_correcao,
+    "Desconto": total_descontos,
+    "Total Divida": total_dividas,
+    "Vencimento": "",
+    # "Débito"
+}
+
+df_total = pd.DataFrame([resultados])
+
+df_exel = pd.concat([df_final, df_total], ignore_index=True)
+
+print(f"\nDataFrame:\n{df_exel}")
 
 df_exel.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
@@ -271,7 +303,7 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
 
     blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
     white_format = workbook.add_format({"bg_color": "#FEFEFE"})
-    bold_format = workbook.add_format({"bold": True})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff"})
 
     for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:

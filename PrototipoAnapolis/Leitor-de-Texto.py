@@ -193,7 +193,7 @@ total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
     "Inscrição": "R$:",
-    "Quadra": "",
+    "Quadra": "Totais",
     "Lote": "",
     "Origem": "",
     "Tributo": "",
@@ -237,7 +237,7 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
 
     blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
     white_format = workbook.add_format({"bg_color": "#FEFEFE"})
-    bold_format = workbook.add_format({"bold": True})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff"})
 
     for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:
