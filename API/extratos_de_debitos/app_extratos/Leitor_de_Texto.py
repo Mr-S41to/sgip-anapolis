@@ -2,6 +2,7 @@ from PyPDF2 import PdfReader
 import re
 import pandas as pd
 
+
 def processamento_dividas(PDF):
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
@@ -19,6 +20,7 @@ def processamento_dividas(PDF):
             # Debugging de leitura de arquivo.
             print(text)
 
+        # Formatando e eliminando sobras desnecessárias
         text = re.sub(r"\.(\s*\.)+", "\n", text)
         text = re.sub(
             r"ANO MÊS TRIBUTO VL. ATUAL. JUROS MULTA TOTAL VENCIDAS / A VENCER",
@@ -26,11 +28,9 @@ def processamento_dividas(PDF):
             text,
         )
         text = re.sub(r"^.*TOTAL:$", "\n", text, flags=re.MULTILINE)
-        # text = re.sub(r'^TOTAL ORIGEM:.*$', '\n', text, flags=re.MULTILINE)
         text = re.sub(r"^.*ANÁPOLIS$", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"^Página.*$", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"^Data:.*$", "\n", text, flags=re.MULTILINE)
-        # text = re.sub(r'Total Dívida Corrente:.*?OBSERVAÇÃO:.*', '\n\n\1', text, flags=re.DOTALL)
         text = re.sub(r",\s(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
         text = re.sub(r";\s(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
         text = re.sub(r"\d(.+?)Matrícula:\s", "\n", text, flags=re.MULTILINE)
@@ -39,6 +39,7 @@ def processamento_dividas(PDF):
         text = re.sub(r"(Endereço:)", r"\n\n\1", text)
         text = re.sub(r"(Total Dívida Corrente:)", r"\n\n\1", text)
 
+        # Padronizando leitura de textos para extração de variaveis de identificação.
         padrao_origem = re.compile(r"Inscrição:\s(.+?)\sOrigem:")
         padrao_inscricao = re.compile(r"\n(.+?)\s*Inscrição:")
         padrao_endereco = re.compile(r"Endereço:\s*(.+?)\n")
@@ -182,30 +183,8 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
 
 # Concatenando todos os DataFrames na lista em um único DataFrame
 df_final = pd.concat(dfs, ignore_index=True)
+
 print(df_final)
-
-# Ler o arquivo CSV
-# df_csv = pd.read_csv("data.csv", delimiter=";")
-
-# # Iterar sobre as linhas do DataFrame do arquivo CSV
-# if isinstance(df_final, pd.DataFrame) and isinstance(df_csv, pd.DataFrame):
-#     # Iterar sobre as linhads do DataFrame do arquivo CSV
-#     for index, row in df_csv.iterrows():
-#         # Encontrar índices onde a Inscrição do df_final corresponde à INSCRICAO_IMOBILIARIA do df_csv
-#         matching_indices = df_final[
-#             df_final["Inscrição"] == row["INSCRICAO_IMOBILIARIA"]
-#         ].index
-
-#         # Iterar sobre os índices encontrados
-#         for idx in matching_indices:
-#             df_final.at[idx, "Contribuinte"] = row["CONTRIBUINTE"]
-#             df_final.at[idx, "Área Lt"] = row["AREA_LOTE"]
-#             df_final.at[idx, "Área Un"] = row["AREA_UNIDADE"]
-#             df_final.at[idx, "TESTADA_M"] = row["TESTADA_M"]
-#             df_final.at[idx, "Oupação"] = row["OCUPACAO"]
-#             df_final.at[idx, "Status Imóvel"] = row["SITUACAO"]
-# else:
-#     print("df_final e df_csv devem ser DataFrames do pandas.")
 
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
@@ -214,7 +193,7 @@ total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
     "Inscrição": "R$:",
-    "Quadra": "",
+    "Quadra": "Totais",
     "Lote": "",
     "Origem": "",
     "Tributo": "",
@@ -226,12 +205,7 @@ resultados = {
     "Multa": total_multa,
     "Total Divida": total_divida,
     "Vencidas": "",
-    "A Vencer": "",
-    "Área Lt": "",
-    "Área Un": "",
-    "TESTADA_M": "",
-    "Oupação": "",
-    "Status Imóvel": "",
+    "A Vencer": ""
 }
 
 df_total = pd.DataFrame([resultados])
@@ -256,9 +230,9 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
         "Sheet1"
     ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
 
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE"})
-    bold_format = workbook.add_format({"bold": True})
+    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
 
     for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:
@@ -269,11 +243,13 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
         if df_exel.iloc[row_num - 1]["Inscrição"] == "R$:":
             worksheet.set_row(row_num, cell_format=bold_format)
 
-    worksheet.set_column('A:A', 16)  # Define a largura da coluna 'A' para 15
-    worksheet.set_column('B:C', 6)
-    worksheet.set_column('D:D', 12)
-    worksheet.set_column('E:E', 14)
-    worksheet.set_column('F:G', 6)
-    worksheet.set_column('H:H', 14)
-    worksheet.set_column('I:L', 12)
-    worksheet.set_column('M:N', 8)
+    worksheet.set_column("A:A", 16)  # Define a largura da coluna 'A' para 15
+    worksheet.set_column("B:C", 6)
+    worksheet.set_column("D:D", 12)
+    worksheet.set_column("E:E", 14)
+    worksheet.set_column("F:G", 6)
+    worksheet.set_column("H:H", 14)
+    worksheet.set_column("I:L", 12)
+    worksheet.set_column("M:N", 8)
+    worksheet.set_column("O:O", 28)
+    worksheet.set_column("T:T", 12)
