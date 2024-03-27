@@ -230,9 +230,9 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
         "Sheet1"
     ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
 
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE"})
-    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff"})
+    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
 
     for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:

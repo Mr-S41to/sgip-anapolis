@@ -18,7 +18,7 @@ def processamento_dividas(PDF):
             # Extração do texto das paginas
             text = pagina.extract_text()  # Limpa o texto anterior
             # Debugging de leitura de arquivo.
-            # print(text)
+            print(text)
 
             text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
@@ -51,7 +51,7 @@ def processamento_dividas(PDF):
             text = re.sub(
                 r"EXTRATO\sDE\sDÉBITO", "\nEXTRATO DE DÉBITO", text, flags=re.MULTILINE
             )
-            print("Texto formatado:\n", text)
+            print(text)
 
             padrao_data = re.compile(r"EXTRATO DE DÉBITO(.+?)(?=EXTRATO DE DÉBITO|$)", re.DOTALL)
             correspondencia_data = padrao_data
@@ -189,7 +189,7 @@ def processamento_dividas(PDF):
                         "Lote": lote,
                         "Status": status,
                         "Parcela": parcela,
-                        "Porcentagem": porcentagem,
+                        "Alíquota": porcentagem,
                         "Multa": multa,
                         "Valor Tributo": valor_tributo,
                         "Vencimento": vencimento,
@@ -229,16 +229,16 @@ for i, imovel in enumerate(imoveis_resultados, start=1):
             [divida],
             columns=[
                 "Inscrição",
-                "Local",
+                # "Local",
                 "Quadra",
                 "Lote",
-                "Status",
+                # "Status",
                 "Tributo",
                 "Ref",
                 "Parcela",
-                "Base",
+                # "Base",
                 "Valor Tributo",
-                "Porcentagem",
+                "Alíquota",
                 "Juros",
                 "Multa",
                 "Correção",
@@ -259,7 +259,7 @@ total_multas = df_final["Multa"].sum()
 total_correcao = df_final["Correção"].sum()
 total_descontos = df_final["Desconto"].sum()
 total_dividas = df_final["Total Divida"].sum()
-total_base = df_final["Base"].sum()
+# total_base = df_final["Base"].sum()
 
 resultados = {
     "Inscrição": "R$:",
@@ -272,7 +272,7 @@ resultados = {
     "Parcela": "",
     # "Base": total_base,
     "Valor Tributo": total_tributos,
-    "Porcentagem": "",
+    "Alíquota": "",
     "Juros" : total_juros,
     "Multa": total_multas,
     "Correção": total_correcao,
@@ -288,10 +288,10 @@ df_exel = pd.concat([df_final, df_total], ignore_index=True)
 
 print(f"\nDataFrame:\n{df_exel}")
 
-df_exel.to_csv("RelatórioFinal.csv", index=False)
+df_exel.to_csv("RelatórioFinalJataí.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
-Excel = "RelatórioFinal.xlsx"
+Excel = "RelatórioFinalJataí.xlsx"
 with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     df_exel.to_excel(writer, index=False)
     print("Arquivo Exel Salvo com sucesso!")
@@ -301,10 +301,10 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
         "Sheet1"
     ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
 
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE"})
-    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff"})
-
+    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+    
     for row_num in range(1, len(df_exel) + 1):
         if row_num % 2 == 0:
             worksheet.set_row(row_num, cell_format=blue_format)
@@ -315,9 +315,10 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
             worksheet.set_row(row_num, cell_format=bold_format)
 
     worksheet.set_column("A:A", 10)
-    worksheet.set_column("B:D", 6)
+    worksheet.set_column("B:C", 6)
+    worksheet.set_column("D:D", 14)
     worksheet.set_column("E:H", 12)
     worksheet.set_column("I:I", 8)
     worksheet.set_column("J:J", 12)
-    worksheet.set_column("K:O", 10)
-    worksheet.set_column("P:P", 12)
+    worksheet.set_column("K:L", 10)
+    worksheet.set_column("M:N", 12)
