@@ -3,7 +3,15 @@ import re
 import pandas as pd
 
 
-def processamento_dividas(PDF):
+def processamento_dividas(PDF, CSV):
+
+    try:
+        df_csv = pd.read_csv(CSV, encoding='latin1', sep=";")
+    except UnicodeDecodeError:
+        df_csv = pd.read_csv(CSV, encoding='iso-8859-1')
+    
+    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "SITUACAO", "NUTITULO", "Nome_Cliente", "CIDADE"]]
+
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
         reader_pdf = PdfReader(file_pdf)
@@ -143,48 +151,58 @@ def processamento_dividas(PDF):
 
             imoveis.append({"Inscrição": inscricao, "Dívidas": dividas})
 
-    return imoveis
+    dfs = []
 
+    # Depuração de resultados.
+    for imovel in imoveis:
+        inscricao = imovel["Inscrição"]
+        dividas = imovel["Dívidas"]
+
+        for divida in dividas:
+            df = pd.DataFrame(
+                divida["Divida"],
+                columns=[
+                    "Inscrição",
+                    "Quadra",
+                    "Lote",
+                    "Origem",
+                    "Tributo",
+                    "Ano",
+                    "Mês",
+                    "Situação",
+                    "Valor Atual",
+                    "Juros",
+                    "Multa",
+                    "Total Divida",
+                    "Vencidas",
+                    "A Vencer",
+                ],
+            )
+
+            # Adicionando o DataFrame atual à lista
+            if any(df["Inscrição"].isin(df_csv["NMLOCAL"])):
+                dfs.append(df)
+                indices_correspondentes = df[df["Inscrição"].isin(df_csv["NMLOCAL"])].index
+                valores_correspondentes = csv_data.loc[df_csv["NMLOCAL"].isin(df["Inscrição"])]
+                for coluna in csv_data.columns:
+                    df.loc[indices_correspondentes, coluna] = valores_correspondentes[coluna].values
+
+
+    # Concatenando todos os DataFrames na lista em um único DataFrame
+    if dfs:  # Verifica se a lista de DataFrames não está vazia
+        df_final = pd.concat(dfs, ignore_index=True)
+    else:
+        # Se a lista de DataFrames estiver vazia, cria um DataFrame vazio
+        df_final = pd.DataFrame()
+
+    return df_final
 
 PDF = "sample.pdf"
-imoveis_resultados = processamento_dividas(PDF)
+CSV = "data.csv"
 
-# Depuração de resultados.
-dfs = []
+df_final = processamento_dividas(PDF, CSV)
 
-# Depuração de resultados.
-for i, imovel in enumerate(imoveis_resultados, start=1):
-    inscricao = imovel["Inscrição"]
-    dividas = imovel["Dívidas"]
-
-    for divida in dividas:
-        df = pd.DataFrame(
-            divida["Divida"],
-            columns=[
-                "Inscrição",
-                "Quadra",
-                "Lote",
-                "Origem",
-                "Tributo",
-                "Ano",
-                "Mês",
-                "Situação",
-                "Valor Atual",
-                "Juros",
-                "Multa",
-                "Total Divida",
-                "Vencidas",
-                "A Vencer",
-            ],
-        )
-
-        # Adicionando o DataFrame atual à lista
-        dfs.append(df)
-
-# Concatenando todos os DataFrames na lista em um único DataFrame
-df_final = pd.concat(dfs, ignore_index=True)
-
-print(df_final)
+print(df_final, "1")
 
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
@@ -192,8 +210,9 @@ total_juros = df_final["Juros"].sum()
 total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
+    "DEOBSERVACAO": " Totais",
     "Inscrição": "R$:",
-    "Quadra": "Totais",
+    "Quadra": "",
     "Lote": "",
     "Origem": "",
     "Tributo": "",
@@ -205,51 +224,135 @@ resultados = {
     "Multa": total_multa,
     "Total Divida": total_divida,
     "Vencidas": "",
-    "A Vencer": ""
+    "A Vencer": "",
+    "NMEMPRESA": "",
+    "CDEMPRESAVIEW": "",
+    "NMEMPREEND": "",
+    "CDEMPREENDVIEW": "",
+    "NUUNIDADE": "",
+    "SITUACAO": "",
+    "NUCONTRATOVIEW": "",
+    "NUTITULO": "",
+    "Nome_Cliente": "",
+    "CIDADE": "",
+    "CNPJ": "",
 }
 
-df_total = pd.DataFrame([resultados])
+# Convert the resultados dictionary to a DataFrame and concatenate it with df_final
+resultados_df = pd.DataFrame([resultados])
+df_final = pd.concat([df_final, resultados_df], ignore_index=True)
 
-df_exel = pd.concat([df_final, df_total], ignore_index=True)
+coluns = [
+    "DEOBSERVACAO", 
+    "Inscrição",
+    "Quadra",
+    "Lote",
+    "Origem",
+    "Tributo", 
+    "Ano",
+    "Mês",
+    "Situação", 
+    "Valor Atual", 
+    "Juros", 
+    "Multa", 
+    "Total Divida", 
+    "Vencidas", 
+    "A Vencer", 
+    "NMEMPRESA", 
+    "CDEMPRESAVIEW", 
+    "NMEMPREEND",
+    "CDEMPREENDVIEW",
+    "NUUNIDADE",
+    "SITUACAO",
+    "NUCONTRATOVIEW",
+    "NUTITULO", 
+    "Nome_Cliente", 
+    "CIDADE",
+    "CNPJ"
+    ]
+df_final = df_final[coluns]
 
-# Depuração do DataFrame final
-print(df_exel)
+df_final = df_final.rename(columns={
+    "DEOBSERVACAO": "Observação",
+    "NMEMPRESA": "Empresa",
+    "CDEMPRESAVIEW": "Cod. Empresa",
+    "NMEMPREEND": "Empreendimento",
+    "CDEMPREENDVIEW": "Cod. Empreendimento",
+    "NUUNIDADE": "Unidade",
+    "SITUACAO": "Disponibilidade",
+    "NUCONTRATOVIEW": "Contrato",
+    "NUTITULO": "Titulo",
+    "Nome_Cliente": "Cliente",
+    "CIDADE": "Cidade"
+})
+
+order = [
+    "Observação", 
+    "Inscrição",
+    "Quadra",
+    "Lote",
+    "Origem",
+    "Tributo", 
+    "Ano",
+    "Mês",
+    "Situação", 
+    "Valor Atual", 
+    "Juros", 
+    "Multa", 
+    "Total Divida", 
+    "Vencidas", 
+    "A Vencer", 
+    "Empresa", 
+    "Cod. Empresa", 
+    "Empreendimento",
+    "Cod. Empreendimento",
+    "Unidade",
+    "Disponibilidade",
+    "Contrato",
+    "Titulo", 
+    "Cliente", 
+    "Cidade",
+    "CNPJ"
+]
+df_final = df_final.reindex(columns=order)
+
+df_final = df_final[order]
 
 # Salvando arquivo .CSV
-df_exel.to_csv("RelatórioFinal.csv", index=False)
+df_final.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
 Excel = "RelatórioFinal.xlsx"
 with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
-    df_exel.to_excel(writer, index=False)
-    print("Arquivo Exel Salvo com sucesso!")
+    df_final.to_excel(writer, index=False)
+    print("Arquivo Excel Salvo com sucesso!")
 
     workbook = writer.book
-    worksheet = writer.sheets[
-        "Sheet1"
-    ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
+    worksheet = writer.sheets["Sheet1"]  # Define o nome da planilha para Sheet1
 
     blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
     white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
     bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
 
-    for row_num in range(1, len(df_exel) + 1):
+    for row_num in range(1, len(df_final) + 1):
         if row_num % 2 == 0:
             worksheet.set_row(row_num, cell_format=blue_format)
         else:
             worksheet.set_row(row_num, cell_format=white_format)
 
-        if df_exel.iloc[row_num - 1]["Inscrição"] == "R$:":
+        if df_final.iloc[row_num - 1]["Inscrição"] == "R$:":
             worksheet.set_row(row_num, cell_format=bold_format)
 
-    worksheet.set_column("A:A", 16)  # Define a largura da coluna 'A' para 15
-    worksheet.set_column("B:C", 6)
-    worksheet.set_column("D:D", 12)
-    worksheet.set_column("E:E", 14)
+    worksheet.set_column("A:A", 64+8)  # Define a largura da coluna "A"
+    worksheet.set_column("B:B", 16)
+    worksheet.set_column("F:F", 16)
+    worksheet.set_column("I:I", 14)
     worksheet.set_column("F:G", 6)
-    worksheet.set_column("H:H", 14)
-    worksheet.set_column("I:L", 12)
-    worksheet.set_column("M:N", 8)
-    worksheet.set_column("O:O", 28)
-    worksheet.set_column("T:T", 12)
+    worksheet.set_column("J:J", 10)
+    worksheet.set_column("M:M", 10)
+    worksheet.set_column("P:P", 32)
+    worksheet.set_column("Q:Q", 12)
+    worksheet.set_column("R:R", 32)
+    worksheet.set_column("S:S", 20)
+    worksheet.set_column("U:U", 16)
