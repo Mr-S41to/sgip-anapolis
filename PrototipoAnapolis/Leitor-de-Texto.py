@@ -10,7 +10,7 @@ def processamento_dividas(PDF, CSV):
     except UnicodeDecodeError:
         df_csv = pd.read_csv(CSV, encoding='iso-8859-1')
     
-    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "SITUACAO", "NUTITULO", "Nome_Cliente", "CIDADE"]]
+    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ"]]
 
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
@@ -210,8 +210,8 @@ total_juros = df_final["Juros"].sum()
 total_valor_atual = df_final["Valor Atual"].sum()
 
 resultados = {
-    "DEOBSERVACAO": " Totais",
-    "Inscrição": "R$:",
+    "DEOBSERVACAO": "Totais R$:",
+    "Inscrição": "",
     "Quadra": "",
     "Lote": "",
     "Origem": "",
@@ -351,8 +351,11 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     worksheet.set_column("F:G", 6)
     worksheet.set_column("J:J", 10)
     worksheet.set_column("M:M", 10)
-    worksheet.set_column("P:P", 32)
+    worksheet.set_column("P:P", 28)
     worksheet.set_column("Q:Q", 12)
-    worksheet.set_column("R:R", 32)
+    worksheet.set_column("R:R", 28)
     worksheet.set_column("S:S", 20)
-    worksheet.set_column("U:U", 16)
+    worksheet.set_column("T:T", 12)
+    worksheet.set_column("U:V", 18)
+    worksheet.set_column("X:X", 28)
+    worksheet.set_column("Y:Z", 10)
