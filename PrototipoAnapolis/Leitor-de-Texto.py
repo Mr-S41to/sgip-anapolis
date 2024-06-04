@@ -5,10 +5,7 @@ import pandas as pd
 
 def processamento_dividas(PDF, CSV):
 
-    try:
-        df_csv = pd.read_csv(CSV, encoding='latin1', sep=";")
-    except UnicodeDecodeError:
-        df_csv = pd.read_csv(CSV, encoding='iso-8859-1')
+    df_csv = pd.read_csv(CSV, sep=";")
     
     csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ", "QTAREAPRIV", "QTAREACOMUM"]]
 
@@ -152,6 +149,7 @@ def processamento_dividas(PDF, CSV):
             imoveis.append({"Inscrição": inscricao, "Dívidas": dividas})
 
     dfs = []
+    df_iss = []
 
     # Depuração de resultados.
     for imovel in imoveis:
@@ -184,23 +182,22 @@ def processamento_dividas(PDF, CSV):
                 dfs.append(df)
                 indices_correspondentes = df[df["Inscrição"].isin(df_csv["NMLOCAL"])].index
                 valores_correspondentes = csv_data.loc[df_csv["NMLOCAL"].isin(df["Inscrição"])]
-                for coluna in csv_data.columns:
-                    df.loc[indices_correspondentes, coluna] = valores_correspondentes[coluna].values
+                
+                for indexs in indices_correspondentes:
+                    for coluna in csv_data.columns:
+                        df.at[indexs, coluna] = valores_correspondentes[coluna].values[0]
 
+            if any(df["Origem"] == "Inscrição ISS"):
+                df_iss.append(df)
 
-    # Concatenando todos os DataFrames na lista em um único DataFrame
-    if dfs:  # Verifica se a lista de DataFrames não está vazia
-        df_final = pd.concat(dfs, ignore_index=True)
-    else:
-        # Se a lista de DataFrames estiver vazia, cria um DataFrame vazio
-        df_final = pd.DataFrame()
+    df_final = pd.concat(dfs, ignore_index=True)
+    
+    return df_final, df_iss
 
-    return df_final
-
-PDF = "sample.pdf"
+PDF = "sample3.pdf"
 CSV = "data.csv"
 
-df_final = processamento_dividas(PDF, CSV)
+df_final, df_iss = processamento_dividas(PDF, CSV)
 
 print(df_final, "1")
 
@@ -326,12 +323,55 @@ df_final = df_final.reindex(columns=order)
 
 df_final = df_final[order]
 
+df_iss = pd.concat(df_iss, ignore_index=True)
+
+novo_cabecalho = {
+    "Inscrição": "ISS e Tributos",
+    "Origem": "",
+    "Quadra" : "",
+    "Lote": "",
+    "Tributo": "",
+    "Ano": "",
+    "Mês": "",
+    "Situação": "",
+    "Valor Atual": "",
+    "Juros": "",
+    "Multa": "",
+    "Total Divida": "",
+    "Vencidas": "",
+    "A Vencer": "",
+}
+
+df_cabecalho = pd.DataFrame([novo_cabecalho])
+
+df_iss = pd.concat([df_cabecalho, df_iss], ignore_index=True)
+
+ExcelISS = "Dividas Diversas.xlsx"
+with pd.ExcelWriter(ExcelISS, engine="xlsxwriter") as writer:
+    df_iss.to_excel(writer, index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets["Sheet1"]  # Define o nome da planilha para Sheet1
+
+    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+
+    for row_num in range(1, len(df_iss) + 1):
+        if row_num % 2 == 0:
+            worksheet.set_row(row_num, cell_format=blue_format)
+        else:
+            worksheet.set_row(row_num, cell_format=white_format)
+
+        # if df_iss.iloc[row_num - 1]["Observação"] == "Totais R$:":
+        #     worksheet.set_row(row_num, cell_format=bold_format)
+
 # Salvando arquivo em .CSV
 df_final.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
-Excel = "RelatórioFinal.xlsx"
+Excel = "Relatório Final.xlsx"
 with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     df_final.to_excel(writer, index=False)
     print("Arquivo Excel Salvo com sucesso!")
@@ -349,19 +389,19 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
         else:
             worksheet.set_row(row_num, cell_format=white_format)
 
-        if df_final.iloc[row_num - 1]["Inscrição"] == "R$:":
+        if df_final.iloc[row_num - 1]["Observação"] == "Totais R$:":
             worksheet.set_row(row_num, cell_format=bold_format)
 
-    worksheet.set_column("A:A", 64+8)  # Define a largura da coluna "A"
+    worksheet.set_column("A:A", 16)  # Define a largura da coluna "A"
     worksheet.set_column("B:B", 16)
     worksheet.set_column("F:F", 16)
     worksheet.set_column("I:I", 14)
-    worksheet.set_column("F:G", 6)
+    worksheet.set_column("G:H", 6)
     worksheet.set_column("J:J", 10)
     worksheet.set_column("M:M", 10)
-    worksheet.set_column("P:P", 28)
+    worksheet.set_column("P:P", 32)
     worksheet.set_column("Q:Q", 12)
-    worksheet.set_column("R:R", 28)
+    worksheet.set_column("R:R", 32)
     worksheet.set_column("S:S", 20)
     worksheet.set_column("T:T", 12)
     worksheet.set_column("U:V", 18)
