@@ -10,7 +10,7 @@ def processamento_dividas(PDF, CSV):
     except UnicodeDecodeError:
         df_csv = pd.read_csv(CSV, encoding='iso-8859-1')
     
-    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ"]]
+    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ", "QTAREAPRIV", "QTAREACOMUM"]]
 
     # Abrir pedef em Binários.
     with open(PDF, "rb") as file_pdf:
@@ -236,9 +236,11 @@ resultados = {
     "Nome_Cliente": "",
     "CIDADE": "",
     "CNPJ": "",
+    "QTAREAPRIV": "",
+    "QTAREACOMUM": ""
 }
 
-# Convert the resultados dictionary to a DataFrame and concatenate it with df_final
+# Converte os resultados em um dataframe para concatena-ló ao dataframe df_final.
 resultados_df = pd.DataFrame([resultados])
 df_final = pd.concat([df_final, resultados_df], ignore_index=True)
 
@@ -268,7 +270,9 @@ coluns = [
     "NUTITULO", 
     "Nome_Cliente", 
     "CIDADE",
-    "CNPJ"
+    "CNPJ",
+    "QTAREAPRIV",
+    "QTAREACOMUM"
     ]
 df_final = df_final[coluns]
 
@@ -283,7 +287,9 @@ df_final = df_final.rename(columns={
     "NUCONTRATOVIEW": "Contrato",
     "NUTITULO": "Titulo",
     "Nome_Cliente": "Cliente",
-    "CIDADE": "Cidade"
+    "CIDADE": "Cidade",
+    "QTAREAPRIV": "Área Priv.",
+    "QTAREACOMUM": "Área Com."
 })
 
 order = [
@@ -312,13 +318,15 @@ order = [
     "Titulo", 
     "Cliente", 
     "Cidade",
-    "CNPJ"
+    "CNPJ",
+    "Área Priv.",
+    "Área Com."
 ]
 df_final = df_final.reindex(columns=order)
 
 df_final = df_final[order]
 
-# Salvando arquivo .CSV
+# Salvando arquivo em .CSV
 df_final.to_csv("RelatórioFinal.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
@@ -358,4 +366,5 @@ with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
     worksheet.set_column("T:T", 12)
     worksheet.set_column("U:V", 18)
     worksheet.set_column("X:X", 28)
-    worksheet.set_column("Y:Z", 10)
+    worksheet.set_column("Y:Y", 10)
+    worksheet.set_column("Z:Z", 12)
