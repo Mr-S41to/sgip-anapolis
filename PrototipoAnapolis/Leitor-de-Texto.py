@@ -199,8 +199,6 @@ CSV = "data.csv"
 
 df_final, df_iss = processamento_dividas(PDF, CSV)
 
-print(df_final, "1")
-
 total_divida = df_final["Total Divida"].sum()
 total_multa = df_final["Multa"].sum()
 total_juros = df_final["Juros"].sum()
@@ -346,6 +344,27 @@ df_cabecalho = pd.DataFrame([novo_cabecalho])
 
 df_iss = pd.concat([df_cabecalho, df_iss], ignore_index=True)
 
+resultados_iss = {
+    "Inscrição": "Totais R$:",
+    "Origem": "",
+    "Quadra" : "",
+    "Lote": "",
+    "Tributo": "",
+    "Ano": "",
+    "Mês": "",
+    "Situação": "",
+    "Valor Atual": "",
+    "Juros": "",
+    "Multa": "",
+    "Total Divida": "",
+    "Vencidas": "",
+    "A Vencer": "",
+}
+
+
+resultados_iss_df = pd.DataFrame([resultados_iss])
+df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
+
 ExcelISS = "Dividas Diversas.xlsx"
 with pd.ExcelWriter(ExcelISS, engine="xlsxwriter") as writer:
     df_iss.to_excel(writer, index=False)
@@ -363,8 +382,8 @@ with pd.ExcelWriter(ExcelISS, engine="xlsxwriter") as writer:
         else:
             worksheet.set_row(row_num, cell_format=white_format)
 
-        # if df_iss.iloc[row_num - 1]["Observação"] == "Totais R$:":
-        #     worksheet.set_row(row_num, cell_format=bold_format)
+        if df_iss.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
+            worksheet.set_row(row_num, cell_format=bold_format)
 
 # Salvando arquivo em .CSV
 df_final.to_csv("RelatórioFinal.csv", index=False)
