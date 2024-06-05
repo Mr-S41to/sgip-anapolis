@@ -344,6 +344,16 @@ df_cabecalho = pd.DataFrame([novo_cabecalho])
 
 df_iss = pd.concat([df_cabecalho, df_iss], ignore_index=True)
 
+df_iss["Total Divida"] = pd.to_numeric(df_iss["Total Divida"], errors='coerce').fillna(0)
+df_iss["Multa"] = pd.to_numeric(df_iss["Multa"], errors='coerce').fillna(0)
+df_iss["Juros"] = pd.to_numeric(df_iss["Juros"], errors='coerce').fillna(0)
+df_iss["Valor Atual"] = pd.to_numeric(df_iss["Valor Atual"], errors='coerce').fillna(0)
+
+total_divida_iss = df_iss["Total Divida"].sum()
+total_multa_iss = df_iss["Multa"].sum()
+total_juros_iss = df_iss["Juros"].sum()
+total_valor_iss = df_iss["Valor Atual"].sum()
+
 resultados_iss = {
     "Inscrição": "Totais R$:",
     "Origem": "",
@@ -353,10 +363,10 @@ resultados_iss = {
     "Ano": "",
     "Mês": "",
     "Situação": "",
-    "Valor Atual": "",
-    "Juros": "",
-    "Multa": "",
-    "Total Divida": "",
+    "Valor Atual": total_valor_iss,
+    "Juros": total_juros_iss,
+    "Multa": total_multa_iss,
+    "Total Divida": total_divida_iss,
     "Vencidas": "",
     "A Vencer": "",
 }
@@ -385,8 +395,14 @@ with pd.ExcelWriter(ExcelISS, engine="xlsxwriter") as writer:
         if df_iss.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
             worksheet.set_row(row_num, cell_format=bold_format)
 
+    worksheet.set_column("B:B", 12)
+    worksheet.set_column("E:E", 14)
+    worksheet.set_column("H:H", 16)
+    worksheet.set_column("I:I", 10)
+    worksheet.set_column("L:L", 10)
+
 # Salvando arquivo em .CSV
-df_final.to_csv("RelatórioFinal.csv", index=False)
+df_final.to_csv("Relatório Final.csv", index=False)
 print("Arquivo CSV Salvo com sucesso!")
 
 # Salvando arquivo em formato Excel
