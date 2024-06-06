@@ -204,34 +204,34 @@ def processamento_dividas(pdf_path, CSV):
     df_iss = pd.concat(df_iss, ignore_index=True)
     
     coluns = [
-    "DEOBSERVACAO", 
-    "Inscrição",
-    "Quadra",
-    "Lote",
-    "Origem",
-    "Tributo", 
-    "Ano",
-    "Mês",
-    "Situação", 
-    "Valor Atual", 
-    "Juros", 
-    "Multa", 
-    "Total Divida", 
-    "Vencidas", 
-    "A Vencer", 
-    "NMEMPRESA", 
-    "CDEMPRESAVIEW", 
-    "NMEMPREEND",
-    "CDEMPREENDVIEW",
-    "NUUNIDADE",
-    "SITUACAO",
-    "NUCONTRATOVIEW",
-    "NUTITULO", 
-    "Nome_Cliente", 
-    "CIDADE",
-    "CNPJ",
-    "QTAREAPRIV",
-    "QTAREACOMUM"
+        "DEOBSERVACAO", 
+        "Inscrição",
+        "Quadra",
+        "Lote",
+        "Origem",
+        "Tributo", 
+        "Ano",
+        "Mês",
+        "Situação", 
+        "Valor Atual", 
+        "Juros", 
+        "Multa", 
+        "Total Divida", 
+        "Vencidas", 
+        "A Vencer", 
+        "NMEMPRESA", 
+        "CDEMPRESAVIEW", 
+        "NMEMPREEND",
+        "CDEMPREENDVIEW",
+        "NUUNIDADE",
+        "SITUACAO",
+        "NUCONTRATOVIEW",
+        "NUTITULO", 
+        "Nome_Cliente", 
+        "CIDADE",
+        "CNPJ",
+        "QTAREAPRIV",
+        "QTAREACOMUM"
     ]
     df_final = df_final[coluns]
 
@@ -380,11 +380,66 @@ def upload_file():
     with pd.ExcelWriter(excel_final_path, engine="xlsxwriter") as writer:
         df_final.to_excel(writer, index=False)
         print("Arquivo Excel df_final salvo com sucesso!")
+
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+        
+        blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+        white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+
+        for row_num in range(1, len(df_final) + 1):
+            if row_num % 2 == 0:
+                worksheet.set_row(row_num, cell_format=blue_format)
+            else:
+                worksheet.set_row(row_num, cell_format=white_format)
+
+            if df_final.iloc[row_num - 1]["Observação"] == "Totais R$:":
+                worksheet.set_row(row_num, cell_format=bold_format)
+        
+        worksheet.set_column("A:A", 16)
+        worksheet.set_column("B:B", 16)
+        worksheet.set_column("F:F", 16)
+        worksheet.set_column("I:I", 14)
+        worksheet.set_column("G:H", 6)
+        worksheet.set_column("J:J", 10)
+        worksheet.set_column("M:M", 10)
+        worksheet.set_column("P:P", 32)
+        worksheet.set_column("Q:Q", 12)
+        worksheet.set_column("R:R", 32)
+        worksheet.set_column("S:S", 20)
+        worksheet.set_column("T:T", 12)
+        worksheet.set_column("U:V", 18)
+        worksheet.set_column("X:X", 28)
+        worksheet.set_column("Y:Y", 10)
+        worksheet.set_column("Z:Z", 12)
     
     with pd.ExcelWriter(excel_iss_path, engine="xlsxwriter") as writer:
         df_iss.to_excel(writer, index=False)
         print("Arquivo Excel df_iss salvo com sucesso!")
-    
+
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+
+        blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+        white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+
+        for row_num in range(1, len(df_iss) + 1):
+            if row_num % 2 == 0:
+                worksheet.set_row(row_num, cell_format=blue_format)
+            else:
+                worksheet.set_row(row_num, cell_format=white_format)
+
+            if df_iss.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
+                worksheet.set_row(row_num, cell_format=bold_format)
+
+        worksheet.set_column("B:B", 12)
+        worksheet.set_column("E:E", 14)
+        worksheet.set_column("H:H", 16)
+        worksheet.set_column("I:I", 10)
+        worksheet.set_column("L:L", 10)
+        
     return {
         "df_final": excel_final_path,
         "df_iss": excel_iss_path
