@@ -1,16 +1,26 @@
 from PyPDF2 import PdfReader
 import re
 import pandas as pd
+import xlsxwriter
+from flask import Flask, request, send_file
+import os
+import random
+import string
 
+app = Flask(__name__)
 
-def processamento_dividas(PDF, CSV):
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    df_csv = pd.read_csv(CSV, sep=";")
-    
+def processamento_dividas(pdf_path, CSV):
+
+    df_csv = pd.read_csv(CSV, sep=";", encoding="utf-8")
     csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ", "QTAREAPRIV", "QTAREACOMUM"]]
 
     # Abrir pedef em Binários.
-    with open(PDF, "rb") as file_pdf:
+    with open(pdf_path, "rb") as file_pdf:
         reader_pdf = PdfReader(file_pdf)
         num_paginas = len(reader_pdf.pages)
 
@@ -191,55 +201,9 @@ def processamento_dividas(PDF, CSV):
                 df_iss.append(df)
 
     df_final = pd.concat(dfs, ignore_index=True)
+    df_iss = pd.concat(df_iss, ignore_index=True)
     
-    return df_final, df_iss
-
-PDF = "sample3.pdf"
-CSV = "data.csv"
-
-df_final, df_iss = processamento_dividas(PDF, CSV)
-
-total_divida = df_final["Total Divida"].sum()
-total_multa = df_final["Multa"].sum()
-total_juros = df_final["Juros"].sum()
-total_valor_atual = df_final["Valor Atual"].sum()
-
-resultados = {
-    "DEOBSERVACAO": "Totais R$:",
-    "Inscrição": "",
-    "Quadra": "",
-    "Lote": "",
-    "Origem": "",
-    "Tributo": "",
-    "Ano": "",
-    "Mês": "",
-    "Situação": "",
-    "Valor Atual": total_valor_atual,
-    "Juros": total_juros,
-    "Multa": total_multa,
-    "Total Divida": total_divida,
-    "Vencidas": "",
-    "A Vencer": "",
-    "NMEMPRESA": "",
-    "CDEMPRESAVIEW": "",
-    "NMEMPREEND": "",
-    "CDEMPREENDVIEW": "",
-    "NUUNIDADE": "",
-    "SITUACAO": "",
-    "NUCONTRATOVIEW": "",
-    "NUTITULO": "",
-    "Nome_Cliente": "",
-    "CIDADE": "",
-    "CNPJ": "",
-    "QTAREAPRIV": "",
-    "QTAREACOMUM": ""
-}
-
-# Converte os resultados em um dataframe para concatena-ló ao dataframe df_final.
-resultados_df = pd.DataFrame([resultados])
-df_final = pd.concat([df_final, resultados_df], ignore_index=True)
-
-coluns = [
+    coluns = [
     "DEOBSERVACAO", 
     "Inscrição",
     "Quadra",
@@ -269,177 +233,162 @@ coluns = [
     "QTAREAPRIV",
     "QTAREACOMUM"
     ]
-df_final = df_final[coluns]
+    df_final = df_final[coluns]
 
-df_final = df_final.rename(columns={
-    "DEOBSERVACAO": "Observação",
-    "NMEMPRESA": "Empresa",
-    "CDEMPRESAVIEW": "Cod. Empresa",
-    "NMEMPREEND": "Empreendimento",
-    "CDEMPREENDVIEW": "Cod. Empreendimento",
-    "NUUNIDADE": "Unidade",
-    "SITUACAO": "Disponibilidade",
-    "NUCONTRATOVIEW": "Contrato",
-    "NUTITULO": "Titulo",
-    "Nome_Cliente": "Cliente",
-    "CIDADE": "Cidade",
-    "QTAREAPRIV": "Área Priv.",
-    "QTAREACOMUM": "Área Com."
-})
+    df_final = df_final.rename(columns={
+        "DEOBSERVACAO": "Observação",
+        "NMEMPRESA": "Empresa",
+        "CDEMPRESAVIEW": "Cod. Empresa",
+        "NMEMPREEND": "Empreendimento",
+        "CDEMPREENDVIEW": "Cod. Empreendimento",
+        "NUUNIDADE": "Unidade",
+        "SITUACAO": "Disponibilidade",
+        "NUCONTRATOVIEW": "Contrato",
+        "NUTITULO": "Titulo",
+        "Nome_Cliente": "Cliente",
+        "CIDADE": "Cidade",
+        "QTAREAPRIV": "Área Priv.",
+        "QTAREACOMUM": "Área Com."
+    })
 
-order = [
-    "Observação", 
-    "Inscrição",
-    "Quadra",
-    "Lote",
-    "Origem",
-    "Tributo", 
-    "Ano",
-    "Mês",
-    "Situação", 
-    "Valor Atual", 
-    "Juros", 
-    "Multa", 
-    "Total Divida", 
-    "Vencidas", 
-    "A Vencer", 
-    "Empresa", 
-    "Cod. Empresa", 
-    "Empreendimento",
-    "Cod. Empreendimento",
-    "Unidade",
-    "Disponibilidade",
-    "Contrato",
-    "Titulo", 
-    "Cliente", 
-    "Cidade",
-    "CNPJ",
-    "Área Priv.",
-    "Área Com."
-]
-df_final = df_final.reindex(columns=order)
+    order = [
+        "Observação", 
+        "Inscrição",
+        "Quadra",
+        "Lote",
+        "Origem",
+        "Tributo", 
+        "Ano",
+        "Mês",
+        "Situação", 
+        "Valor Atual", 
+        "Juros", 
+        "Multa", 
+        "Total Divida", 
+        "Vencidas", 
+        "A Vencer", 
+        "Empresa", 
+        "Cod. Empresa", 
+        "Empreendimento",
+        "Cod. Empreendimento",
+        "Unidade",
+        "Disponibilidade",
+        "Contrato",
+        "Titulo", 
+        "Cliente", 
+        "Cidade",
+        "CNPJ",
+        "Área Priv.",
+        "Área Com."
+    ]
+    df_final = df_final.reindex(columns=order)
 
-df_final = df_final[order]
+    df_final = df_final[order]
+    
+    total_divida = df_final["Total Divida"].sum()
+    total_multa = df_final["Multa"].sum()
+    total_juros = df_final["Juros"].sum()
+    total_valor_atual = df_final["Valor Atual"].sum()
+    
+    resultados = {
+        "Observação" : "Totais R$:", 
+        "Inscrição": "",
+        "Quadra" : "",
+        "Lote" : "",
+        "Origem" : "",
+        "Tributo" : "", 
+        "Ano" : "",
+        "Mês" : "",
+        "Situação" : "",
+        "Valor Atual" : total_valor_atual, 
+        "Juros"  : total_juros,
+        "Multa" : total_multa, 
+        "Total Divida" : total_divida, 
+        "Vencidas" : "", 
+        "A Vencer" : "", 
+        "Empresa" : "", 
+        "Cod. Empresa" : "",
+        "Empreendimento" : "",
+        "Cod. Empreendimento" : "",
+        "Unidade" : "",
+        "Disponibilidade" : "",
+        "Contrato" : "",
+        "Titulo" : "", 
+        "Cliente" : "",
+        "Cidade" : "",
+        "CNPJ" : "",
+        "Área Priv." : "",
+        "Área Com." : "",
+    }
+    resultados_df = pd.DataFrame([resultados])
+    df_final = pd.concat([df_final, resultados_df], ignore_index=True)
+    
+    total_divida_iss = df_iss["Total Divida"].sum()
+    total_multa_iss = df_iss["Multa"].sum()
+    total_juros_iss = df_iss["Juros"].sum()
+    total_valor_iss = df_iss["Valor Atual"].sum()
+    
+    resultados_iss = {
+        "Inscrição": "Totais R$:",
+        "Origem": "",
+        "Quadra" : "",
+        "Lote": "",
+        "Tributo": "",
+        "Ano": "",
+        "Mês": "",
+        "Situação": "",
+        "Valor Atual": total_valor_iss,
+        "Juros": total_juros_iss,
+        "Multa": total_multa_iss,
+        "Total Divida": total_divida_iss,
+        "Vencidas": "",
+        "A Vencer": "",
+    }
+    resultados_iss_df = pd.DataFrame([resultados_iss])
+    df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
+    
+    print("Ugauga dataframe", df_final, "Ugauga")
+    print("Uga uga ISS", df_iss, "ISS uga buga uga")
+    
+    return df_final, df_iss
 
-df_iss = pd.concat(df_iss, ignore_index=True)
 
-novo_cabecalho = {
-    "Inscrição": "ISS e Tributos",
-    "Origem": "",
-    "Quadra" : "",
-    "Lote": "",
-    "Tributo": "",
-    "Ano": "",
-    "Mês": "",
-    "Situação": "",
-    "Valor Atual": "",
-    "Juros": "",
-    "Multa": "",
-    "Total Divida": "",
-    "Vencidas": "",
-    "A Vencer": "",
-}
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if 'file' not in request.files:
+        return "No file part"
+    
+    file = request.files["file"]
+    
+    if file.filename == "":
+        return "No selected file"
+    
+    pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(pdf_path)
+    
+    CSV = "data.csv"
+    
+    df_final, df_iss = processamento_dividas(pdf_path, CSV)
 
-df_cabecalho = pd.DataFrame([novo_cabecalho])
-
-df_iss = pd.concat([df_cabecalho, df_iss], ignore_index=True)
-
-df_iss["Total Divida"] = pd.to_numeric(df_iss["Total Divida"], errors='coerce').fillna(0)
-df_iss["Multa"] = pd.to_numeric(df_iss["Multa"], errors='coerce').fillna(0)
-df_iss["Juros"] = pd.to_numeric(df_iss["Juros"], errors='coerce').fillna(0)
-df_iss["Valor Atual"] = pd.to_numeric(df_iss["Valor Atual"], errors='coerce').fillna(0)
-
-total_divida_iss = df_iss["Total Divida"].sum()
-total_multa_iss = df_iss["Multa"].sum()
-total_juros_iss = df_iss["Juros"].sum()
-total_valor_iss = df_iss["Valor Atual"].sum()
-
-resultados_iss = {
-    "Inscrição": "Totais R$:",
-    "Origem": "",
-    "Quadra" : "",
-    "Lote": "",
-    "Tributo": "",
-    "Ano": "",
-    "Mês": "",
-    "Situação": "",
-    "Valor Atual": total_valor_iss,
-    "Juros": total_juros_iss,
-    "Multa": total_multa_iss,
-    "Total Divida": total_divida_iss,
-    "Vencidas": "",
-    "A Vencer": "",
-}
-
-
-resultados_iss_df = pd.DataFrame([resultados_iss])
-df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
-
-ExcelISS = "Dividas Diversas.xlsx"
-with pd.ExcelWriter(ExcelISS, engine="xlsxwriter") as writer:
-    df_iss.to_excel(writer, index=False)
-
-    workbook = writer.book
-    worksheet = writer.sheets["Sheet1"]  # Define o nome da planilha para Sheet1
-
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
-
-    for row_num in range(1, len(df_iss) + 1):
-        if row_num % 2 == 0:
-            worksheet.set_row(row_num, cell_format=blue_format)
-        else:
-            worksheet.set_row(row_num, cell_format=white_format)
-
-        if df_iss.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
-            worksheet.set_row(row_num, cell_format=bold_format)
-
-    worksheet.set_column("B:B", 12)
-    worksheet.set_column("E:E", 14)
-    worksheet.set_column("H:H", 16)
-    worksheet.set_column("I:I", 10)
-    worksheet.set_column("L:L", 10)
-
-# Salvando arquivo em .CSV
-df_final.to_csv("Relatório Final.csv", index=False)
-print("Arquivo CSV Salvo com sucesso!")
-
-# Salvando arquivo em formato Excel
-Excel = "Relatório Final.xlsx"
-with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
-    df_final.to_excel(writer, index=False)
-    print("Arquivo Excel Salvo com sucesso!")
-
-    workbook = writer.book
-    worksheet = writer.sheets["Sheet1"]  # Define o nome da planilha para Sheet1
-
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
-
-    for row_num in range(1, len(df_final) + 1):
-        if row_num % 2 == 0:
-            worksheet.set_row(row_num, cell_format=blue_format)
-        else:
-            worksheet.set_row(row_num, cell_format=white_format)
-
-        if df_final.iloc[row_num - 1]["Observação"] == "Totais R$:":
-            worksheet.set_row(row_num, cell_format=bold_format)
-
-    worksheet.set_column("A:A", 16)  # Define a largura da coluna "A"
-    worksheet.set_column("B:B", 16)
-    worksheet.set_column("F:F", 16)
-    worksheet.set_column("I:I", 14)
-    worksheet.set_column("G:H", 6)
-    worksheet.set_column("J:J", 10)
-    worksheet.set_column("M:M", 10)
-    worksheet.set_column("P:P", 32)
-    worksheet.set_column("Q:Q", 12)
-    worksheet.set_column("R:R", 32)
-    worksheet.set_column("S:S", 20)
-    worksheet.set_column("T:T", 12)
-    worksheet.set_column("U:V", 18)
-    worksheet.set_column("X:X", 28)
-    worksheet.set_column("Y:Y", 10)
-    worksheet.set_column("Z:Z", 12)
+    ramdom_numbers = "".join(random.choices(string.digits, k=8))
+    excel_final_filename = f"Relatório Final({ramdom_numbers}).xlsx"
+    excel_iss_filename = f"Dividas Diversas({ramdom_numbers}).xlsx"
+    
+    excel_final_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_final_filename)
+    excel_iss_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_iss_filename)
+    
+    with pd.ExcelWriter(excel_final_path, engine="xlsxwriter") as writer:
+        df_final.to_excel(writer, index=False)
+        print("Arquivo Excel df_final salvo com sucesso!")
+    
+    with pd.ExcelWriter(excel_iss_path, engine="xlsxwriter") as writer:
+        df_iss.to_excel(writer, index=False)
+        print("Arquivo Excel df_iss salvo com sucesso!")
+    
+    return {
+        "df_final": excel_final_path,
+        "df_iss": excel_iss_path
+    }
+    
+if __name__ == '__main__':
+    app.run(debug=True)
