@@ -2,12 +2,15 @@ from PyPDF2 import PdfReader
 import re
 import pandas as pd
 import xlsxwriter
-from flask import Flask, request, send_file
+import zipfile
+from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
 import os
 import random
 import string
 
 app = Flask(__name__)
+CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -371,8 +374,8 @@ def upload_file():
     df_final, df_iss = processamento_dividas(pdf_path, CSV)
 
     ramdom_numbers = "".join(random.choices(string.digits, k=8))
-    excel_final_filename = f"Relatório Final({ramdom_numbers}).xlsx"
-    excel_iss_filename = f"Dividas Diversas({ramdom_numbers}).xlsx"
+    excel_final_filename = f"Relatório-Final({ramdom_numbers}).xlsx"
+    excel_iss_filename = f"Dividas-Diversas({ramdom_numbers}).xlsx"
     
     excel_final_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_final_filename)
     excel_iss_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_iss_filename)
@@ -439,11 +442,16 @@ def upload_file():
         worksheet.set_column("H:H", 16)
         worksheet.set_column("I:I", 10)
         worksheet.set_column("L:L", 10)
-        
-    return {
-        "df_final": excel_final_path,
-        "df_iss": excel_iss_path
-    }
     
+    zip_filename = f"Relatórios-Zipados({ramdom_numbers}).zip"
+    zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+    with zipfile.ZipFile(zip_path, 'w') as zip_file:
+        zip_file.write(excel_final_path, os.path.basename(excel_final_path))
+        zip_file.write(excel_iss_path, os.path.basename(excel_iss_path))
+    
+    response = send_file(excel_final_path, as_attachment=False)
+   
+    return response
+
 if __name__ == '__main__':
     app.run(debug=True)
