@@ -449,7 +449,7 @@ def upload_file():
         zip_file.write(excel_final_path, os.path.basename(excel_final_path))
         zip_file.write(excel_iss_path, os.path.basename(excel_iss_path))
     
-    response = send_file(excel_final_path, as_attachment=False)
+    response = send_file(zip_path, as_attachment=True)
    
     return response
 
