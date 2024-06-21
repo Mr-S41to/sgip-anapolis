@@ -356,7 +356,7 @@ def processamento_dividas(pdf_path, CSV):
     return df_final, df_iss
 
 
-@app.route("/upload", methods=["POST"])
+@app.route("/anapolis", methods=["POST"])
 def upload_file():
     if 'file' not in request.files:
         return "No file part"

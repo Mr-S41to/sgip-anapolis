@@ -1,9 +1,11 @@
 # sgip-anapolis
-MyPDF2:
-pip install PyPDF2
 
 Pandas:
 pip install pandas
 
-XLSX Whiter:
-pip install xlsxwriter
+Dependencias: 
+1 - PyPDF2
+2 - pandas
+3 - xlsxwriter
+4 - flask
+5 - flask_cors
