@@ -19,8 +19,15 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def processamento_dividas(pdf_path, CSV):
 
-    df_csv = pd.read_csv(CSV, sep=";", encoding="utf-8")
-    csv_data = df_csv[["NMLOCAL", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "Nome_Cliente", "CIDADE", "CNPJ", "QTAREAPRIV", "QTAREACOMUM"]]
+    encodings = ["utf-8", "latin-1", "cp1252"]
+    df_csv = None
+    for encoding in encodings:
+        try:
+            df_csv = pd.read_csv(CSV, sep=",", encoding=encoding)
+            break
+        except UnicodeDecodeError as e:
+             print(f"Failed to read CSV with encoding {encoding}: {e}")
+    csv_data = df_csv[["NMINSCRICAOIMOBILIARIA", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "NMCLIENTE",  "CIDADE", "QTAREAPRIV", "QTAREACOMUM"]]
 
     # Abrir pedef em Binários.
     with open(pdf_path, "rb") as file_pdf:
@@ -191,10 +198,10 @@ def processamento_dividas(pdf_path, CSV):
             )
 
             # Adicionando o DataFrame atual à lista
-            if any(df["Inscrição"].isin(df_csv["NMLOCAL"])):
+            if any(df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])):
                 dfs.append(df)
-                indices_correspondentes = df[df["Inscrição"].isin(df_csv["NMLOCAL"])].index
-                valores_correspondentes = csv_data.loc[df_csv["NMLOCAL"].isin(df["Inscrição"])]
+                indices_correspondentes = df[df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])].index
+                valores_correspondentes = csv_data.loc[df_csv["NMINSCRICAOIMOBILIARIA"].isin(df["Inscrição"])]
                 
                 for indexs in indices_correspondentes:
                     for coluna in csv_data.columns:
@@ -203,8 +210,26 @@ def processamento_dividas(pdf_path, CSV):
             if any(df["Origem"] == "Inscrição ISS"):
                 df_iss.append(df)
 
-    df_final = pd.concat(dfs, ignore_index=True)
-    df_iss = pd.concat(df_iss, ignore_index=True)
+    
+    if not dfs:
+        # Create a DataFrame with a single row of "-" values if dfs is empty
+        df_final = pd.DataFrame([{
+            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
+            "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
+            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-"
+        }])
+    else:
+        df_final = pd.concat(dfs, ignore_index=True)
+
+    if not df_iss:
+        # Create a DataFrame with a single row of "-" values if df_iss is empty
+        df_iss = pd.DataFrame([{
+            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
+            "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
+            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-"
+        }])
+    else:
+        df_iss = pd.concat(df_iss, ignore_index=True)
     
     coluns = [
         "DEOBSERVACAO", 
@@ -230,9 +255,9 @@ def processamento_dividas(pdf_path, CSV):
         "SITUACAO",
         "NUCONTRATOVIEW",
         "NUTITULO", 
-        "Nome_Cliente", 
+        "NMCLIENTE", 
         "CIDADE",
-        "CNPJ",
+        # "CNPJ",
         "QTAREAPRIV",
         "QTAREACOMUM"
     ]
@@ -248,7 +273,7 @@ def processamento_dividas(pdf_path, CSV):
         "SITUACAO": "Disponibilidade",
         "NUCONTRATOVIEW": "Contrato",
         "NUTITULO": "Titulo",
-        "Nome_Cliente": "Cliente",
+        "NMCLIENTE": "Cliente",
         "CIDADE": "Cidade",
         "QTAREAPRIV": "Área Priv.",
         "QTAREACOMUM": "Área Com."
@@ -280,7 +305,7 @@ def processamento_dividas(pdf_path, CSV):
         "Titulo", 
         "Cliente", 
         "Cidade",
-        "CNPJ",
+        # "CNPJ",
         "Área Priv.",
         "Área Com."
     ]
@@ -319,7 +344,7 @@ def processamento_dividas(pdf_path, CSV):
         "Titulo" : "", 
         "Cliente" : "",
         "Cidade" : "",
-        "CNPJ" : "",
+        # "CNPJ" : "",
         "Área Priv." : "",
         "Área Com." : "",
     }
@@ -349,9 +374,6 @@ def processamento_dividas(pdf_path, CSV):
     }
     resultados_iss_df = pd.DataFrame([resultados_iss])
     df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
-    
-    print("Ugauga dataframe", df_final, "Ugauga")
-    print("Uga uga ISS", df_iss, "ISS uga buga uga")
     
     return df_final, df_iss
 
