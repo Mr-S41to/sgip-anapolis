@@ -212,7 +212,6 @@ def processamento_dividas(pdf_path, CSV):
 
     
     if not dfs:
-        # Create a DataFrame with a single row of "-" values if dfs is empty
         df_final = pd.DataFrame([{
             "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
             "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
@@ -222,7 +221,6 @@ def processamento_dividas(pdf_path, CSV):
         df_final = pd.concat(dfs, ignore_index=True)
 
     if not df_iss:
-        # Create a DataFrame with a single row of "-" values if df_iss is empty
         df_iss = pd.DataFrame([{
             "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
             "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
