@@ -27,7 +27,7 @@ def processamento_dividas(pdf_path, CSV):
             break
         except UnicodeDecodeError as e:
              print(f"Failed to read CSV with encoding {encoding}: {e}")
-    csv_data = df_csv[["NMINSCRICAOIMOBILIARIA", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "NMCLIENTE",  "CIDADE", "QTAREAPRIV", "QTAREACOMUM"]]
+    csv_data = df_csv[["NMINSCRICAOIMOBILIARIA", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "NMCLIENTE",  "CIDADE", "QTAREAPRIV", "QTAREACOMUM", "CPF_CNPJ"]]
 
     # Abrir pedef em Binários.
     with open(pdf_path, "rb") as file_pdf:
@@ -255,7 +255,7 @@ def processamento_dividas(pdf_path, CSV):
         "NUTITULO", 
         "NMCLIENTE", 
         "CIDADE",
-        # "CNPJ",
+        "CPF_CNPJ",
         "QTAREAPRIV",
         "QTAREACOMUM"
     ]
@@ -274,7 +274,7 @@ def processamento_dividas(pdf_path, CSV):
         "NMCLIENTE": "Cliente",
         "CIDADE": "Cidade",
         "QTAREAPRIV": "Área Priv.",
-        "QTAREACOMUM": "Área Com."
+        "QTAREACOMUM": "Área Com.",
     })
 
     order = [
@@ -303,7 +303,6 @@ def processamento_dividas(pdf_path, CSV):
         "Titulo", 
         "Cliente", 
         "Cidade",
-        # "CNPJ",
         "Área Priv.",
         "Área Com."
     ]
@@ -342,7 +341,6 @@ def processamento_dividas(pdf_path, CSV):
         "Titulo" : "", 
         "Cliente" : "",
         "Cidade" : "",
-        # "CNPJ" : "",
         "Área Priv." : "",
         "Área Com." : "",
     }
@@ -463,7 +461,7 @@ def upload_file():
         worksheet.set_column("I:I", 10)
         worksheet.set_column("L:L", 10)
     
-    zip_filename = f"Relatórios-Zipados({ramdom_numbers}).zip"
+    zip_filename = f"Extrato de Débitos({ramdom_numbers}).zip"
     zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
         zip_file.write(excel_final_path, os.path.basename(excel_final_path))
