@@ -387,7 +387,7 @@ def upload_file():
     pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(pdf_path)
     
-    CSV = "../../data.csv"
+    CSV = "../../Dados/data.csv"
     
     df_final, df_iss = processamento_dividas(pdf_path, CSV)
 
