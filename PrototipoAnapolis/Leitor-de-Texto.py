@@ -82,7 +82,8 @@ def processamento_dividas(pdf_path, CSV):
             correspondencia_inscricao,
             correspondencia_data,
         ):
-
+            print(correspondencia_endereco)
+            
             padrao_quadra = re.compile(r"Q[Dd].(.+?)\s")
             padrao_lote = re.compile(r"L[Tt].(.+?)\s")
 
@@ -149,6 +150,7 @@ def processamento_dividas(pdf_path, CSV):
                                     "Inscrição": inscricao,
                                     "Quadra": quadra,
                                     "Lote": lote,
+                                    "Endereço": endereco,
                                     "Origem": origem,
                                     "Ano": ano,
                                     "Mês": mes,
@@ -170,6 +172,7 @@ def processamento_dividas(pdf_path, CSV):
 
     dfs = []
     df_iss = []
+    df_dividas_nao_identificadas = []
 
     # Depuração de resultados.
     for imovel in imoveis:
@@ -194,6 +197,7 @@ def processamento_dividas(pdf_path, CSV):
                     "Total Divida",
                     "Vencidas",
                     "A Vencer",
+                    "Endereço"
                 ],
             )
 
@@ -206,28 +210,45 @@ def processamento_dividas(pdf_path, CSV):
                 for indexs in indices_correspondentes:
                     for coluna in csv_data.columns:
                         df.at[indexs, coluna] = valores_correspondentes[coluna].values[0]
-
+            
+            if all(~df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])) and any(df["Origem"] != "Inscrição ISS"):
+                df_dividas_nao_identificadas.append(df)
+                
             if any(df["Origem"] == "Inscrição ISS"):
-                df_iss.append(df)
-
-    
+                df_iss.append(df) 
+                
     if not dfs:
         df_final = pd.DataFrame([{
             "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
             "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
-            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-"
+            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-", "Endereço": "-"
         }])
     else:
         df_final = pd.concat(dfs, ignore_index=True)
-
+        
+    # if "Endereço" in df_final.columns:
+    #     df_final = df_final.drop(columns=["Endereço"]) 
+        
     if not df_iss:
         df_iss = pd.DataFrame([{
             "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
             "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
-            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-"
+            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-", "Endereço": "-"
         }])
     else:
         df_iss = pd.concat(df_iss, ignore_index=True)
+    
+    # if "Endereço" in df_iss.columns:
+    #     df_iss = df_iss.drop(columns=["Endereço"]) 
+        
+    if not df_dividas_nao_identificadas:
+        df_dividas_nao_identificadas = pd.DataFrame([{
+            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Origem": "-", "Tributo": "-", 
+            "Ano": "-", "Mês": "-", "Situação": "-", "Valor Atual": "-", "Juros": "-", 
+            "Multa": "-", "Total Divida": "-", "Vencidas": "-", "A Vencer": "-", "Endereço": "-"
+        }])
+    else:
+        df_dividas_nao_identificadas = pd.concat(df_dividas_nao_identificadas, ignore_index=True)
     
     coluns = [
         "DEOBSERVACAO", 
@@ -257,7 +278,8 @@ def processamento_dividas(pdf_path, CSV):
         "CIDADE",
         "CPF_CNPJ",
         "QTAREAPRIV",
-        "QTAREACOMUM"
+        "QTAREACOMUM",
+        "Endereço"
     ]
     df_final = df_final[coluns]
 
@@ -304,7 +326,8 @@ def processamento_dividas(pdf_path, CSV):
         "Cliente", 
         "Cidade",
         "Área Priv.",
-        "Área Com."
+        "Área Com.",
+        "Endereço"
     ]
     df_final = df_final.reindex(columns=order)
 
@@ -343,6 +366,7 @@ def processamento_dividas(pdf_path, CSV):
         "Cidade" : "",
         "Área Priv." : "",
         "Área Com." : "",
+        "Endereço": ""
     }
     resultados_df = pd.DataFrame([resultados])
     df_final = pd.concat([df_final, resultados_df], ignore_index=True)
@@ -371,7 +395,32 @@ def processamento_dividas(pdf_path, CSV):
     resultados_iss_df = pd.DataFrame([resultados_iss])
     df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
     
-    return df_final, df_iss
+    total_divida_deconhecida = df_dividas_nao_identificadas["Total Divida"].sum()
+    total_multa_desconhecida = df_dividas_nao_identificadas["Multa"].sum()
+    total_juros_desconhecida = df_dividas_nao_identificadas["Juros"].sum()
+    total_valor_desconhecida = df_dividas_nao_identificadas["Valor Atual"].sum()
+    
+    resultados_dividas_nao_identificadas = {
+        "Inscrição": "Totais R$:",
+        "Origem": "",
+        "Quadra" : "",
+        "Lote": "",
+        "Tributo": "",
+        "Ano": "",
+        "Mês": "",
+        "Situação": "",
+        "Valor Atual": total_valor_desconhecida,
+        "Juros": total_juros_desconhecida,
+        "Multa": total_multa_desconhecida,
+        "Total Divida": total_divida_deconhecida,
+        "Vencidas": "",
+        "A Vencer": "",
+    }
+    resultados_dividas_nao_identificadas = pd.DataFrame([resultados_dividas_nao_identificadas])
+    df_dividas_nao_identificadas = pd.concat([df_dividas_nao_identificadas, resultados_dividas_nao_identificadas], ignore_index=True)
+    
+    print("Não identidicado!\n", df_dividas_nao_identificadas)
+    return df_final, df_iss, df_dividas_nao_identificadas
 
 
 @app.route("/anapolis", methods=["POST"])
@@ -389,14 +438,16 @@ def upload_file():
     
     CSV = "../../Dados/data.csv"
     
-    df_final, df_iss = processamento_dividas(pdf_path, CSV)
+    df_final, df_iss, df_dividas_nao_identificadas = processamento_dividas(pdf_path, CSV)
 
     ramdom_numbers = "".join(random.choices(string.digits, k=8))
     excel_final_filename = f"Relatório-Final({ramdom_numbers}).xlsx"
     excel_iss_filename = f"Dividas-Diversas({ramdom_numbers}).xlsx"
+    excel_dividas_nao_identificadas_filename = f"Dividas-Não-Identificadas({ramdom_numbers}).xlsx"
     
     excel_final_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_final_filename)
     excel_iss_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_iss_filename)
+    excel_dividas_nao_identificadas_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_dividas_nao_identificadas_filename)
     
     with pd.ExcelWriter(excel_final_path, engine="xlsxwriter") as writer:
         df_final.to_excel(writer, index=False)
@@ -434,6 +485,7 @@ def upload_file():
         worksheet.set_column("X:X", 28)
         worksheet.set_column("Y:Y", 10)
         worksheet.set_column("Z:Z", 12)
+        worksheet.set_column("AB:AB", 86)
     
     with pd.ExcelWriter(excel_iss_path, engine="xlsxwriter") as writer:
         df_iss.to_excel(writer, index=False)
@@ -460,12 +512,42 @@ def upload_file():
         worksheet.set_column("H:H", 16)
         worksheet.set_column("I:I", 10)
         worksheet.set_column("L:L", 10)
+        worksheet.set_column("O:O", 86)
     
+    with pd.ExcelWriter(excel_dividas_nao_identificadas_path, engine="xlsxwriter") as writer:
+        df_dividas_nao_identificadas.to_excel(writer, index=False)
+        print("Arquivo Excel Dividas Desconhecidas salvo com sucesso!")
+
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+
+        blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+        white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+
+        for row_num in range(1, len(df_dividas_nao_identificadas) + 1):
+            if row_num % 2 == 0:
+                worksheet.set_row(row_num, cell_format=blue_format)
+            else:
+                worksheet.set_row(row_num, cell_format=white_format)
+
+            if df_dividas_nao_identificadas.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
+                worksheet.set_row(row_num, cell_format=bold_format)
+
+        worksheet.set_column("A:A", 16)
+        worksheet.set_column("B:B", 12)
+        worksheet.set_column("E:E", 14)
+        worksheet.set_column("H:H", 16)
+        worksheet.set_column("I:I", 10)
+        worksheet.set_column("L:L", 10)
+        worksheet.set_column("O:O", 86)
+        
     zip_filename = f"Extrato de Débitos({ramdom_numbers}).zip"
     zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
         zip_file.write(excel_final_path, os.path.basename(excel_final_path))
         zip_file.write(excel_iss_path, os.path.basename(excel_iss_path))
+        zip_file.write(excel_dividas_nao_identificadas_path, os.path.basename(excel_dividas_nao_identificadas_path))
     
     response = send_file(zip_path, as_attachment=True)
    
