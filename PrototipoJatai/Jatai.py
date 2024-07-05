@@ -1,11 +1,36 @@
 from PyPDF2 import PdfReader
-import re
 import pandas as pd
+import xlsxwriter
+import zipfile
+from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
+import re
+import os
+import random
+import string
 
+app = Flask(__name__)
+CORS(app)
 
-def processamento_dividas(PDF):
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def processamento_dividas(pdf_path, CSV):
+
+    encodings = ["utf-8", "latin-1", "cp1252"]
+    df_csv = None
+    for encoding in encodings:
+        try:
+            df_csv = pd.read_csv(CSV, sep=",", encoding=encoding)
+            break
+        except UnicodeDecodeError as e:
+             print(f"Failed to read CSV with encoding {encoding}: {e}")
+    csv_data = df_csv[["NMINSCRICAOIMOBILIARIA", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "NMCLIENTE",  "CIDADE", "QTAREAPRIV", "QTAREACOMUM", "CPF_CNPJ"]]
+
     # Abrir pedef em Binários.
-    with open(PDF, "rb") as file_pdf:
+    with open(pdf_path, "rb") as file_pdf:
         reader_pdf = PdfReader(file_pdf)
         num_paginas = len(reader_pdf.pages)
 
@@ -59,23 +84,20 @@ def processamento_dividas(PDF):
 
             ocorrencias_dividas = correspondencia_data.findall(text)
 
-            # i = 0
             for ocorrencia_divida in ocorrencias_dividas:
-                # i += 1
-                # print(f"\n{i} - Dívida encontrada.")
 
                 dividas = []
                 total_origem = 0
 
-                # padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
-                # correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
+                padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
+                correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
 
-                # if correspondencia_incricao_cci:
-                #     inscricao_cci = correspondencia_incricao_cci.group(1)
-                #     print("Número de inscrição CCI:", inscricao_cci)
-                # else:
-                #     inscricao_cci = None
-                #     print("Número de inscrição CCI não encontrado.")
+                if correspondencia_incricao_cci:
+                    inscricao_cci = correspondencia_incricao_cci.group(1)
+                    print("Número de inscrição CCI:", inscricao_cci)
+                else:
+                    inscricao_cci = None
+                    print("Número de inscrição CCI não encontrado.")
 
                 padrao_local = re.compile(r"\n(.+?),", re.DOTALL)
                 correspondencia_local = padrao_local.search(ocorrencia_divida)
@@ -107,7 +129,7 @@ def processamento_dividas(PDF):
                     lote = None
                     # print("Número do lote não encontrado.")
 
-                padrao_bairro = re.compile(r"BAIRRO:\s(.+?),", re.DOTALL)
+                padrao_bairro = re.compile(r"BAIRRO:\s(.+?)\n", re.DOTALL)
                 correspondencia_bairro = padrao_bairro.search(ocorrencia_divida)
 
                 if correspondencia_bairro:
@@ -134,10 +156,6 @@ def processamento_dividas(PDF):
 
                 for linha in data_dividas:
                     total_dividas = 0
-
-                    padrao_cod = re.findall(r"\w\s-\s\d+", linha, re.DOTALL)
-                    correspondencia_cod = padrao_cod[0] if padrao_cod else None
-                    inscricao = correspondencia_cod
                     # Dividir a linha pelos espaços em branco
                     valores = linha.split()
 
@@ -171,20 +189,10 @@ def processamento_dividas(PDF):
                         [valor_tributo, base, juros, multa, total, correcao, desconto],
                     )
 
-                    inscricao = re.sub(r"[A-Za-z\s-]", "", inscricao)
-
-                    # Exibir os valores
-                    # print(
-                    #     f"\nVariáveis: Débito: {debito}, Tributo: {tributo}, Status: {status}, Ref.: {ref}, Parcela: {parcela}, Base: {base}, Porcentagem: {porcentagem}, Juros: {juros}, Multa: {multa}, Correção: {correcao}, Valor Tributo: {valor_tributo}, Desconto: {desconto}, Total: {total}, Vencimento: {vencimento}"
-                    # )
-                    # print(
-                    #     f"Variáveis não identificadas: {variavel4}, {variavel6}, {variavel9}"
-                    # )
-
                     total_dividas += float(total)
                     divida = {
-                        "Inscrição": inscricao,
-                        "Local": local,
+                        "Inscrição": inscricao_cci,
+                        # "Local": local,
                         "Quadra": quadra,
                         "Lote": lote,
                         "Status": status,
@@ -199,126 +207,300 @@ def processamento_dividas(PDF):
                         "Juros": juros,
                         "Débito": debito,
                         "Ref": ref,
-                        "Desconto": desconto,
+                        "Descontos": desconto,
                         "Total Divida": total,
+                        "Bairro": bairro
                     }
                     dividas.append(divida)
 
                 total_origem += float(total_dividas)
                 imovel = {
                     "Dividas": dividas,
-                    # "Inscrição": inscricao,
                     "Total Origem": total_origem,
                 }
                 imoveis.append(imovel)
+                
+    dfs = []
+    df_dividas_desconhecidas = []
 
-    return imoveis
+    for imovel in imoveis:
+        dividas = imovel["Dividas"]
 
+        for divida in dividas:
+            df = pd.DataFrame(
+                [divida],
+                columns=[
+                    "Inscrição",
+                    # "Local",
+                    "Quadra",
+                    "Lote",
+                    # "Status",
+                    "Tributo",
+                    "Ref",
+                    "Parcela",
+                    # "Base",
+                    "Valor Tributo",
+                    "Alíquota",
+                    "Juros",
+                    "Multa",
+                    "Correção",
+                    "Descontos",
+                    "Total Divida",
+                    "Vencimento",
+                    # "Débito",
+                    "Bairro"
+                ],
+            )
+        
+            if any(df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])):
+                dfs.append(df)
+                indices_correspondentes = df[df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])].index
+                valores_correspondentes = csv_data.loc[df_csv["NMINSCRICAOIMOBILIARIA"].isin(df["Inscrição"])]
+                
+                for indexs in indices_correspondentes:
+                    for coluna in csv_data.columns:
+                        df.at[indexs, coluna] = valores_correspondentes[coluna].values[0]
+        
+            if all(~df["Inscrição"].isin(df_csv["NMINSCRICAOIMOBILIARIA"])):
+                df_dividas_desconhecidas.append(df)
 
-PDF = "sample.pdf"
-imoveis_resultados = processamento_dividas(PDF)
-# print(imoveis_resultados)
-dfs = []
-
-for i, imovel in enumerate(imoveis_resultados, start=1):
-    # inscricao_cci = imovel["Inscrição"]
-    dividas = imovel["Dividas"]
-
-    for divida in dividas:
-        df = pd.DataFrame(
-            [divida],
-            columns=[
-                "Inscrição",
-                # "Local",
-                "Quadra",
-                "Lote",
-                # "Status",
-                "Tributo",
-                "Ref",
-                "Parcela",
-                # "Base",
-                "Valor Tributo",
-                "Alíquota",
-                "Juros",
-                "Multa",
-                "Correção",
-                "Desconto",
-                "Total Divida",
-                "Vencimento",
-                # "Débito"
-            ],
-        )
-
-        dfs.append(df)
-
-df_final = pd.concat(dfs, ignore_index=True)
-
-total_tributos = df_final["Valor Tributo"].sum()
-total_juros = df_final["Juros"].sum()
-total_multas = df_final["Multa"].sum()
-total_correcao = df_final["Correção"].sum()
-total_descontos = df_final["Desconto"].sum()
-total_dividas = df_final["Total Divida"].sum()
-# total_base = df_final["Base"].sum()
-
-resultados = {
-    "Inscrição": "R$:",
-    # "Local",
-    "Quadra": "Totais",
-    "Lote": "",
-    # "Status": "",
-    "Tributo": "",
-    "Ref": "",
-    "Parcela": "",
-    # "Base": total_base,
-    "Valor Tributo": total_tributos,
-    "Alíquota": "",
-    "Juros" : total_juros,
-    "Multa": total_multas,
-    "Correção": total_correcao,
-    "Desconto": total_descontos,
-    "Total Divida": total_dividas,
-    "Vencimento": "",
-    # "Débito"
-}
-
-df_total = pd.DataFrame([resultados])
-
-df_exel = pd.concat([df_final, df_total], ignore_index=True)
-
-print(f"\nDataFrame:\n{df_exel}")
-
-df_exel.to_csv("RelatórioFinalJataí.csv", index=False)
-print("Arquivo CSV Salvo com sucesso!")
-
-Excel = "RelatórioFinalJataí.xlsx"
-with pd.ExcelWriter(Excel, engine="xlsxwriter") as writer:
-    df_exel.to_excel(writer, index=False)
-    print("Arquivo Exel Salvo com sucesso!")
-
-    workbook = writer.book
-    worksheet = writer.sheets[
-        "Sheet1"
-    ]  # Mude 'Sheet1' para o nome da sua planilha, se necessário
-
-    blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
-    white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-    bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+    if not dfs:
+        df_final = pd.DataFrame([{
+            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Tributo": "-", "Ref": "-", 
+            "Parcela": "-", "Valor Tributo": "-", "Alíquota": "-", "Juros": "-","Multa": "-", 
+            "Correção": "-", "Descontos": "-", "Total Divida": "-", "Vencimento": "-", "Bairro": "-"
+        }])
+    else:
+        df_final = pd.concat(dfs, ignore_index=True)  
+            
+    if not df_dividas_desconhecidas:
+        df_dividas_desconhecidas = pd.DataFrame([{
+            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Tributo": "-", "Ref": "-", 
+            "Parcela": "-", "Valor Tributo": "-", "Alíquota": "-", "Juros": "-","Multa": "-", 
+            "Correção": "-", "Descontos": "-", "Total Divida": "-", "Vencimento": "-", "Bairro": "-"
+        }])
+    else:
+        df_dividas_desconhecidas = pd.concat(df_dividas_desconhecidas, ignore_index=True)
     
-    for row_num in range(1, len(df_exel) + 1):
-        if row_num % 2 == 0:
-            worksheet.set_row(row_num, cell_format=blue_format)
-        else:
-            worksheet.set_row(row_num, cell_format=white_format)
+        
+    coluns = [
+        "DEOBSERVACAO", 
+        "Inscrição",
+        "Quadra",
+        "Lote",
+        "Tributo", 
+        "Ref",
+        "Parcela",
+        "Valor Tributo", 
+        "Alíquota", 
+        "Juros", 
+        "Multa", 
+        "Correção", 
+        "Descontos", 
+        "Total Divida",
+        "Vencimento", 
+        "NMEMPRESA", 
+        "CDEMPRESAVIEW", 
+        "NMEMPREEND",
+        "CDEMPREENDVIEW",
+        "NUUNIDADE",
+        "SITUACAO",
+        "NUCONTRATOVIEW",
+        "NUTITULO", 
+        "NMCLIENTE", 
+        "CIDADE",
+        "CPF_CNPJ",
+        "QTAREAPRIV",
+        "QTAREACOMUM",
+        "Bairro",
+    ]
+    df_final = df_final[coluns]
 
-        if df_exel.iloc[row_num - 1]["Inscrição"] == "R$:":
-            worksheet.set_row(row_num, cell_format=bold_format)
+    df_final = df_final.rename(columns={
+        "DEOBSERVACAO": "Observação",
+        "NMEMPRESA": "Empresa",
+        "CDEMPRESAVIEW": "Cod. Empresa",
+        "NMEMPREEND": "Empreendimento",
+        "CDEMPREENDVIEW": "Cod. Empreendimento",
+        "NUUNIDADE": "Unidade",
+        "SITUACAO": "Disponibilidade",
+        "NUCONTRATOVIEW": "Contrato",
+        "NUTITULO": "Titulo",
+        "NMCLIENTE": "Cliente",
+        "CIDADE": "Cidade",
+        "QTAREAPRIV": "Área Priv.",
+        "QTAREACOMUM": "Área Com.",
+    })
+    
+    order = [
+        "Observação", 
+        "Inscrição",
+        "Quadra",
+        "Lote",
+        "Tributo", 
+        "Ref",
+        "Parcela",
+        "Valor Tributo", 
+        "Alíquota", 
+        "Juros", 
+        "Multa", 
+        "Correção", 
+        "Descontos", 
+        "Total Divida",
+        "Vencimento", 
+        "Empresa", 
+        "Cod. Empresa", 
+        "Empreendimento",
+        "Cod. Empreendimento",
+        "Unidade",
+        "Disponibilidade",
+        "Contrato",
+        "Titulo", 
+        "Cliente", 
+        "Cidade",
+        "Área Priv.",
+        "Área Com.",
+        "Bairro"
+    ]
+    df_final = df_final.reindex(columns=order)
 
-    worksheet.set_column("A:A", 10)
-    worksheet.set_column("B:C", 6)
-    worksheet.set_column("D:D", 14)
-    worksheet.set_column("E:H", 12)
-    worksheet.set_column("I:I", 8)
-    worksheet.set_column("J:J", 12)
-    worksheet.set_column("K:L", 10)
-    worksheet.set_column("M:N", 12)
+    df_final = df_final[order]
+    
+    # total_divida = df_final["Total Divida"].sum()
+    # total_multa = df_final["Multa"].sum()
+    # total_juros = df_final["Juros"].sum()
+    # total_valor_atual = df_final["Valor Atual"].sum()
+    
+    resultados = {
+        "Observação" : "Totais R$:", 
+        "Inscrição": "",
+        "Quadra" : "",
+        "Lote" : "",
+        "Tributo" : "", 
+        "Ref" : "",
+        "Parcela" : "",
+        "Valor Tributo" : "",
+        "Alíquota" : "",
+        "Juros"  : "",
+        "Multa" : "", 
+        "Correção" : "", 
+        "Descontos" : "",
+        "Total Divida" : "", 
+        "Vencimento" : "", 
+        "Empresa" : "", 
+        "Cod. Empresa" : "",
+        "Empreendimento" : "",
+        "Cod. Empreendimento" : "",
+        "Unidade" : "",
+        "Disponibilidade" : "",
+        "Contrato" : "",
+        "Titulo" : "", 
+        "Cliente" : "",
+        "Cidade" : "",
+        "Área Priv." : "",
+        "Área Com." : "",
+        "Bairro" : ""
+    }
+    resultados_df = pd.DataFrame([resultados])
+    df_final = pd.concat([df_final, resultados_df], ignore_index=True)
+    
+    return df_final, df_dividas_desconhecidas
+
+@app.route("/jatai", methods=["POST"])
+def upload_file():
+    
+    if 'file' not in request.files:
+        return "No file part"
+    
+    file = request.files["file"]
+    
+    if file.filename == "":
+        return "No selected file"
+    
+    pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(pdf_path)
+
+    CSV = "../../Dados/data.csv"
+    
+    df_final, df_dividas_desconhecidas = processamento_dividas(pdf_path, CSV)
+    
+    ramdom_numbers = "".join(random.choices(string.digits, k=8))
+
+    excel_final_filename = f"Dividas-de-Unidades({ramdom_numbers}).xlsx"
+    excel_dividas_desconhecidas_filename = f"Dividas-Não-Identificadas({ramdom_numbers}).xlsx"
+     
+    excel_final_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_final_filename)
+    excel_dividas_desconhecidas_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_dividas_desconhecidas_filename)
+    
+    with pd.ExcelWriter(excel_final_path, engine="xlsxwriter") as writer:
+        df_final.to_excel(writer, index=False)
+        print("Arquivo Excel df_final salvo com sucesso!")
+
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+        
+        blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+        white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        
+        for row_num in range(1, len(df_final) + 1):
+            if row_num % 2 == 0:
+                worksheet.set_row(row_num, cell_format=blue_format)
+            else:
+                worksheet.set_row(row_num, cell_format=white_format)
+
+            if df_final.iloc[row_num - 1]["Observação"] == "Totais R$:":
+                worksheet.set_row(row_num, cell_format=bold_format)
+        
+        worksheet.set_column("A:B", 16)
+        worksheet.set_column("D:D", 16)
+        worksheet.set_column("F:M", 10)
+        worksheet.set_column("N:O", 12)
+        worksheet.set_column("P:P", 32)
+        worksheet.set_column("P:P", 32)
+        worksheet.set_column("Q:Q", 12)
+        worksheet.set_column("R:R", 32)
+        worksheet.set_column("S:S", 16)
+        worksheet.set_column("T:V", 12)
+        worksheet.set_column("X:X", 32)
+        worksheet.set_column("Z:AA", 16)
+        worksheet.set_column("AB:AB", 48)
+
+    with pd.ExcelWriter(excel_dividas_desconhecidas_path, engine="xlsxwriter") as writer:
+        df_dividas_desconhecidas.to_excel(writer, index=False)
+        print("Arquivo Excel Dividas Desconhecidas salvo com sucesso!")
+
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+
+        blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
+        white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+
+        for row_num in range(1, len(df_dividas_desconhecidas) + 1):
+            if row_num % 2 == 0:
+                worksheet.set_row(row_num, cell_format=blue_format)
+            else:
+                worksheet.set_row(row_num, cell_format=white_format)
+
+            if df_dividas_desconhecidas.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
+                worksheet.set_row(row_num, cell_format=bold_format)
+
+        worksheet.set_column("A:A", 16)
+        worksheet.set_column("D:D", 16)
+        worksheet.set_column("F:M", 10)
+        worksheet.set_column("N:N", 12)
+        worksheet.set_column("O:O", 86)
+
+    zip_filename = f"Extrato de Débitos({ramdom_numbers}).zip"
+    zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+    with zipfile.ZipFile(zip_path, 'w') as zip_file:
+        zip_file.write(excel_final_path, os.path.basename(excel_final_path))
+        zip_file.write(excel_dividas_desconhecidas_path, os.path.basename(excel_dividas_desconhecidas_path))
+    
+    response = send_file(zip_path, as_attachment=True)
+   
+    return response
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5001)
