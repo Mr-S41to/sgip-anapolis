@@ -1,6 +1,5 @@
 from PyPDF2 import PdfReader
 import pandas as pd
-import xlsxwriter
 import zipfile
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
@@ -173,7 +172,6 @@ def processamento_dividas(pdf_path, CSV):
     df_iss = []
     df_dividas_nao_identificadas = []
 
-    # Depuração de resultados.
     for imovel in imoveis:
         inscricao = imovel["Inscrição"]
         dividas = imovel["Dívidas"]
@@ -375,10 +373,7 @@ def processamento_dividas(pdf_path, CSV):
         }
         resultados_df = pd.DataFrame([resultados])
         df_final = pd.concat([df_final, resultados_df], ignore_index=True)    
-        
-    # if "Endereço" in df_final.columns:
-    #     df_final = df_final.drop(columns=["Endereço"]) 
-        
+       
     if not df_iss:
         df_iss = pd.DataFrame([{
             "Inscrição": "-", 
@@ -445,9 +440,6 @@ def processamento_dividas(pdf_path, CSV):
         resultados_iss_df = pd.DataFrame([resultados_iss])
         df_iss = pd.concat([df_iss, resultados_iss_df], ignore_index=True)
     
-    # if "Endereço" in df_iss.columns:
-    #     df_iss = df_iss.drop(columns=["Endereço"]) 
-        
     if not df_dividas_nao_identificadas:
         df_dividas_nao_identificadas = pd.DataFrame([{
             "Inscrição": "-", 

@@ -1,6 +1,5 @@
 from PyPDF2 import PdfReader
 import pandas as pd
-import xlsxwriter
 import zipfile
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
@@ -29,7 +28,6 @@ def processamento_dividas(pdf_path, CSV):
              print(f"Failed to read CSV with encoding {encoding}: {e}")
     csv_data = df_csv[["NMINSCRICAOIMOBILIARIA", "DEOBSERVACAO", "NMEMPRESA", "CDEMPRESAVIEW", "NMEMPREEND", "CDEMPREENDVIEW", "NUUNIDADE", "SITUACAO", "NUCONTRATOVIEW", "NUTITULO", "NMCLIENTE",  "CIDADE", "QTAREAPRIV", "QTAREACOMUM", "CPF_CNPJ"]]
 
-    # Abrir pedef em Binários.
     with open(pdf_path, "rb") as file_pdf:
         reader_pdf = PdfReader(file_pdf)
         num_paginas = len(reader_pdf.pages)
@@ -37,12 +35,9 @@ def processamento_dividas(pdf_path, CSV):
         text = ""
         imoveis = []
 
-        # Iterando entre paginas do PDF.
         for num_pagina in range(num_paginas):
             pagina = reader_pdf.pages[num_pagina]
-            # Extração do texto das paginas
-            text = pagina.extract_text()  # Limpa o texto anterior
-            # Debugging de leitura de arquivo.
+            text = pagina.extract_text()
             print(text)
 
             text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
@@ -104,59 +99,47 @@ def processamento_dividas(pdf_path, CSV):
 
                 if correspondencia_local:
                     local = correspondencia_local.group(1)
-                    # print("Local:", local)
                 else:
                     local = None
-                    # print("Local não encontrado.")
 
                 padrao_quadra = re.compile(r"QD.(.+?),", re.DOTALL)
                 correspondencia_quadra = padrao_quadra.search(ocorrencia_divida)
 
                 if correspondencia_quadra:
                     quadra = correspondencia_quadra.group(1)
-                    # print("Número da quadra:", quadra)
                 else:
                     quadra = None
-                    # print("Número da quadra não encontrado.")
 
                 padrao_lote = re.compile(r"LT.(.+?),", re.DOTALL)
                 correspondencia_lote = padrao_lote.search(ocorrencia_divida)
 
                 if correspondencia_lote:
                     lote = correspondencia_lote.group(1)
-                    # print("Número do lote:", lote)
                 else:
                     lote = None
-                    # print("Número do lote não encontrado.")
 
                 padrao_bairro = re.compile(r"BAIRRO:\s(.+?)\n", re.DOTALL)
                 correspondencia_bairro = padrao_bairro.search(ocorrencia_divida)
 
                 if correspondencia_bairro:
                     bairro = correspondencia_bairro.group(1)
-                    # print("Bairro:", bairro)
                 else:
                     bairro = None
-                    # print("Bairro não encontrado.")
 
                 padrao_cidade = re.compile(r"CIDADE:\s(.+?),", re.DOTALL)
                 correspondencia_cidade = padrao_cidade.search(ocorrencia_divida)
 
                 if correspondencia_cidade:
                     cidade = correspondencia_cidade.group(1)
-                    # print("Cidade:", cidade)
                 else:
                     cidade = None
-                    # print("Cidade não encontrada.")
 
                 data_dividas = re.findall(
                     r"PE.*?\w\s-\s\d+", ocorrencia_divida, re.DOTALL
                 )
-                # data_dividas = '\n'.join(data_dividas)
 
                 for linha in data_dividas:
                     total_dividas = 0
-                    # Dividir a linha pelos espaços em branco
                     valores = linha.split()
 
                     status = valores[0]
@@ -266,18 +249,42 @@ def processamento_dividas(pdf_path, CSV):
 
     if not dfs:
         df_final = pd.DataFrame([{
-            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Tributo": "-", "Ref": "-", 
-            "Parcela": "-", "Valor Tributo": "-", "Alíquota": "-", "Juros": "-","Multa": "-", 
-            "Correção": "-", "Descontos": "-", "Total Divida": "-", "Vencimento": "-", "Bairro": "-"
+            "Inscrição": "-", 
+            "Quadra": "-", 
+            "Lote": "-", 
+            "Tributo": "-", 
+            "Ref": "-", 
+            "Parcela": "-", 
+            "Valor Tributo": "-", 
+            "Alíquota": "-", 
+            "Juros": "-",
+            "Multa": "-", 
+            "Correção": "-", 
+            "Descontos": "-", 
+            "Total Divida": "-", 
+            "Vencimento": "-", 
+            "Bairro": "-"
         }])
     else:
         df_final = pd.concat(dfs, ignore_index=True)  
             
     if not df_dividas_desconhecidas:
         df_dividas_desconhecidas = pd.DataFrame([{
-            "Inscrição": "-", "Quadra": "-", "Lote": "-", "Tributo": "-", "Ref": "-", 
-            "Parcela": "-", "Valor Tributo": "-", "Alíquota": "-", "Juros": "-","Multa": "-", 
-            "Correção": "-", "Descontos": "-", "Total Divida": "-", "Vencimento": "-", "Bairro": "-"
+            "Inscrição": "-", 
+            "Quadra": "-", 
+            "Lote": "-", 
+            "Tributo": "-", 
+            "Ref": "-", 
+            "Parcela": "-", 
+            "Valor Tributo": "-", 
+            "Alíquota": "-", 
+            "Juros": "-",
+            "Multa": "-", 
+            "Correção": "-", 
+            "Descontos": "-", 
+            "Total Divida": "-", 
+            "Vencimento": "-", 
+            "Bairro": "-"
         }])
     else:
         df_dividas_desconhecidas = pd.concat(df_dividas_desconhecidas, ignore_index=True)
