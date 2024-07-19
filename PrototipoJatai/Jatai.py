@@ -374,8 +374,8 @@ def processamento_dividas(pdf_path, CSV):
     total_descontos = df_final["Descontos"].sum()
     
     resultados = {
-        "Observação" : "Totais R$:", 
-        "Inscrição": "",
+        "Observação" : "", 
+        "Inscrição": "Totais R$:",
         "Quadra" : "",
         "Lote" : "",
         "Tributo" : "", 
@@ -491,7 +491,7 @@ def upload_file():
             else:
                 worksheet.set_row(row_num, cell_format=white_format)
 
-            if df_final.iloc[row_num - 1]["Observação"] == "Totais R$:":
+            if df_final.iloc[row_num - 1]["Inscrição"] == "Totais R$:":
                 worksheet.set_row(row_num, cell_format=bold_format)
         
         worksheet.set_column("A:B", 16)
