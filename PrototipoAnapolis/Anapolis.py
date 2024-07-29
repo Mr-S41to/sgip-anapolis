@@ -173,7 +173,6 @@ def processamento_dividas(pdf_path, CSV):
     df_dividas_nao_identificadas = []
 
     for imovel in imoveis:
-        inscricao = imovel["Inscrição"]
         dividas = imovel["Dívidas"]
 
         for divida in dividas:
@@ -254,6 +253,7 @@ def processamento_dividas(pdf_path, CSV):
         df_final = pd.concat([df_final, resultados_df], ignore_index=True)  
     else:
         df_final = pd.concat(dfs, ignore_index=True)
+       
         coluns = [
             "DEOBSERVACAO", 
             "Inscrição",

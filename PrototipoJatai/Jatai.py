@@ -82,9 +82,8 @@ def processamento_dividas(pdf_path, CSV):
             for ocorrencia_divida in ocorrencias_dividas:
 
                 dividas = []
-                total_origem = 0
 
-                padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)CCI", re.DOTALL)
+                padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)\sCCI:", re.DOTALL)
                 correspondencia_incricao_cci = padrao_inscricao_cci.search(ocorrencia_divida)
 
                 if correspondencia_incricao_cci:
@@ -167,15 +166,9 @@ def processamento_dividas(pdf_path, CSV):
                     total = total.replace(".", "").replace(",", ".")
                     correcao = correcao.replace(".", "").replace(",", ".")
 
-                    valor_tributo, base, juros, multa, total, correcao, desconto = map(
-                        float,
-                        [valor_tributo, base, juros, multa, total, correcao, desconto],
-                    )
-
-                    total_dividas += float(total)
                     divida = {
                         "Inscrição": inscricao_cci,
-                        # "Local": local,
+                        "Local": local,
                         "Quadra": quadra,
                         "Lote": lote,
                         "Status": status,
@@ -185,7 +178,6 @@ def processamento_dividas(pdf_path, CSV):
                         "Valor Tributo": valor_tributo,
                         "Vencimento": vencimento,
                         "Tributo": tributo,
-                        "Base": base,
                         "Correção": correcao,
                         "Juros": juros,
                         "Débito": debito,
@@ -196,10 +188,8 @@ def processamento_dividas(pdf_path, CSV):
                     }
                     dividas.append(divida)
 
-                total_origem += float(total_dividas)
                 imovel = {
                     "Dividas": dividas,
-                    "Total Origem": total_origem,
                 }
                 imoveis.append(imovel)
                 
@@ -214,14 +204,11 @@ def processamento_dividas(pdf_path, CSV):
                 [divida],
                 columns=[
                     "Inscrição",
-                    # "Local",
                     "Quadra",
                     "Lote",
-                    # "Status",
                     "Tributo",
                     "Ref",
                     "Parcela",
-                    # "Base",
                     "Valor Tributo",
                     "Alíquota",
                     "Juros",
@@ -230,7 +217,6 @@ def processamento_dividas(pdf_path, CSV):
                     "Descontos",
                     "Total Divida",
                     "Vencimento",
-                    # "Débito",
                     "Bairro"
                 ],
             )
@@ -265,9 +251,151 @@ def processamento_dividas(pdf_path, CSV):
             "Vencimento": "-", 
             "Bairro": "-"
         }])
+        
+        resultados = {
+            "Inscrição": "Totais R$:", 
+            "Quadra": "-", 
+            "Lote": "-", 
+            "Tributo": "-", 
+            "Ref": "-", 
+            "Parcela": "-", 
+            "Valor Tributo": "-", 
+            "Alíquota": "-", 
+            "Juros": "-",
+            "Multa": "-", 
+            "Correção": "-", 
+            "Descontos": "-", 
+            "Total Divida": "-", 
+            "Vencimento": "-", 
+            "Bairro": "-"
+        }
+        resultados_df = pd.DataFrame([resultados])
+        df_final = pd.concat([df_final, resultados_df], ignore_index=True)
     else:
-        df_final = pd.concat(dfs, ignore_index=True)  
-            
+        df_final = pd.concat(dfs, ignore_index=True)
+        
+        coluns = [
+            "DEOBSERVACAO", 
+            "Inscrição",
+            "Quadra",
+            "Lote",
+            "Tributo", 
+            "Ref",
+            "Parcela",
+            "Valor Tributo", 
+            "Alíquota", 
+            "Juros", 
+            "Multa", 
+            "Correção", 
+            "Descontos", 
+            "Total Divida",
+            "Vencimento", 
+            "NMEMPRESA", 
+            "CDEMPRESAVIEW", 
+            "NMEMPREEND",
+            "CDEMPREENDVIEW",
+            "NUUNIDADE",
+            "SITUACAO",
+            "NUCONTRATOVIEW",
+            "NUTITULO", 
+            "NMCLIENTE", 
+            "CIDADE",
+            "CPF_CNPJ",
+            "QTAREAPRIV",
+            "QTAREACOMUM",
+            "Bairro",
+        ]
+        df_final = df_final[coluns]
+        
+        order = [
+            "Observação", 
+            "Inscrição",
+            "Quadra",
+            "Lote",
+            "Tributo", 
+            "Ref",
+            "Parcela",
+            "Valor Tributo", 
+            "Alíquota", 
+            "Juros", 
+            "Multa", 
+            "Correção", 
+            "Descontos", 
+            "Total Divida",
+            "Vencimento", 
+            "Empresa", 
+            "Cod. Empresa", 
+            "Empreendimento",
+            "Cod. Empreendimento",
+            "Unidade",
+            "Disponibilidade",
+            "Contrato",
+            "Titulo", 
+            "Cliente", 
+            "Cidade",
+            "Área Priv.",
+            "Área Com.",
+            "Bairro"
+        ]
+        df_final = df_final.reindex(columns=order)
+        df_final = df_final[order]  
+        
+        df_final = df_final.rename(columns={
+            "DEOBSERVACAO": "Observação",
+            "NMEMPRESA": "Empresa",
+            "CDEMPRESAVIEW": "Cod. Empresa",
+            "NMEMPREEND": "Empreendimento",
+            "CDEMPREENDVIEW": "Cod. Empreendimento",
+            "NUUNIDADE": "Unidade",
+            "SITUACAO": "Disponibilidade",
+            "NUCONTRATOVIEW": "Contrato",
+            "NUTITULO": "Titulo",
+            "NMCLIENTE": "Cliente",
+            "CIDADE": "Cidade",
+            "QTAREAPRIV": "Área Priv.",
+            "QTAREACOMUM": "Área Com.",
+        })
+        
+        total_divida = df_final["Total Divida"].sum()
+        total_multa = df_final["Multa"].sum()
+        total_juros = df_final["Juros"].sum()
+        total_valor = df_final["Valor Tributo"].sum()
+        total_correcao = df_final["Correção"].sum()
+        total_descontos = df_final["Descontos"].sum()
+        
+        resultados = {
+            "Observação" : "", 
+            "Inscrição": "Totais R$:",
+            "Quadra" : "",
+            "Lote" : "",
+            "Tributo" : "", 
+            "Ref" : "",
+            "Parcela" : "",
+            "Valor Tributo" : total_valor,
+            "Alíquota" : "",
+            "Juros"  : total_juros,
+            "Multa" : total_multa, 
+            "Correção" : total_correcao, 
+            "Descontos" : total_descontos,
+            "Total Divida" : total_divida, 
+            "Vencimento" : "", 
+            "Empresa" : "", 
+            "Cod. Empresa" : "",
+            "Empreendimento" : "",
+            "Cod. Empreendimento" : "",
+            "Unidade" : "",
+            "Disponibilidade" : "",
+            "Contrato" : "",
+            "Titulo" : "", 
+            "Cliente" : "",
+            "Cidade" : "",
+            "Área Priv." : "",
+            "Área Com." : "",
+            "Bairro" : ""
+        }
+        resultados_df = pd.DataFrame([resultados])
+        df_final = pd.concat([df_final, resultados_df], ignore_index=True)
+        
     if not df_dividas_desconhecidas:
         df_dividas_desconhecidas = pd.DataFrame([{
             "Inscrição": "-", 
@@ -286,172 +414,55 @@ def processamento_dividas(pdf_path, CSV):
             "Vencimento": "-", 
             "Bairro": "-"
         }])
+        
+        resultados_dividas_desconhecidas = {
+            "Inscrição": "R$ Totais R$:", 
+            "Quadra": "-", 
+            "Lote": "-", 
+            "Tributo": "-", 
+            "Ref": "-", 
+            "Parcela": "-", 
+            "Valor Tributo": "-", 
+            "Alíquota": "-", 
+            "Juros": "-",
+            "Multa": "-", 
+            "Correção": "-", 
+            "Descontos": "-", 
+            "Total Divida": "-", 
+            "Vencimento": "-", 
+            "Bairro": "-"
+        }
+        resultados_dividas_desconhecidas = pd.DataFrame([resultados_dividas_desconhecidas])
+        df_dividas_desconhecidas = pd.concat([df_dividas_desconhecidas, resultados_dividas_desconhecidas], ignore_index=True)
     else:
         df_dividas_desconhecidas = pd.concat(df_dividas_desconhecidas, ignore_index=True)
     
-        
-    coluns = [
-        "DEOBSERVACAO", 
-        "Inscrição",
-        "Quadra",
-        "Lote",
-        "Tributo", 
-        "Ref",
-        "Parcela",
-        "Valor Tributo", 
-        "Alíquota", 
-        "Juros", 
-        "Multa", 
-        "Correção", 
-        "Descontos", 
-        "Total Divida",
-        "Vencimento", 
-        "NMEMPRESA", 
-        "CDEMPRESAVIEW", 
-        "NMEMPREEND",
-        "CDEMPREENDVIEW",
-        "NUUNIDADE",
-        "SITUACAO",
-        "NUCONTRATOVIEW",
-        "NUTITULO", 
-        "NMCLIENTE", 
-        "CIDADE",
-        "CPF_CNPJ",
-        "QTAREAPRIV",
-        "QTAREACOMUM",
-        "Bairro",
-    ]
-    df_final = df_final[coluns]
-
-    df_final = df_final.rename(columns={
-        "DEOBSERVACAO": "Observação",
-        "NMEMPRESA": "Empresa",
-        "CDEMPRESAVIEW": "Cod. Empresa",
-        "NMEMPREEND": "Empreendimento",
-        "CDEMPREENDVIEW": "Cod. Empreendimento",
-        "NUUNIDADE": "Unidade",
-        "SITUACAO": "Disponibilidade",
-        "NUCONTRATOVIEW": "Contrato",
-        "NUTITULO": "Titulo",
-        "NMCLIENTE": "Cliente",
-        "CIDADE": "Cidade",
-        "QTAREAPRIV": "Área Priv.",
-        "QTAREACOMUM": "Área Com.",
-    })
+        total_divida_desconhecidas = df_dividas_desconhecidas["Total Divida"].sum()
+        total_multa_desconhecidas = df_dividas_desconhecidas["Multa"].sum()
+        total_juros_desconhecidas = df_dividas_desconhecidas["Juros"].sum()
+        total_valor_deconhecidos = df_dividas_desconhecidas["Valor Tributo"].sum()
+        total_correcao_desconhecidas = df_dividas_desconhecidas["Correção"].sum()
+        total_descontos_desconhecidas = df_dividas_desconhecidas["Descontos"].sum()
     
-    order = [
-        "Observação", 
-        "Inscrição",
-        "Quadra",
-        "Lote",
-        "Tributo", 
-        "Ref",
-        "Parcela",
-        "Valor Tributo", 
-        "Alíquota", 
-        "Juros", 
-        "Multa", 
-        "Correção", 
-        "Descontos", 
-        "Total Divida",
-        "Vencimento", 
-        "Empresa", 
-        "Cod. Empresa", 
-        "Empreendimento",
-        "Cod. Empreendimento",
-        "Unidade",
-        "Disponibilidade",
-        "Contrato",
-        "Titulo", 
-        "Cliente", 
-        "Cidade",
-        "Área Priv.",
-        "Área Com.",
-        "Bairro"
-    ]
-    df_final = df_final.reindex(columns=order)
-
-    df_final = df_final[order]
-    
-    total_divida = df_final["Total Divida"].sum()
-    total_multa = df_final["Multa"].sum()
-    total_juros = df_final["Juros"].sum()
-    total_valor = df_final["Valor Tributo"].sum()
-    total_correcao = df_final["Correção"].sum()
-    total_descontos = df_final["Descontos"].sum()
-    
-    resultados = {
-        "Observação" : "", 
-        "Inscrição": "Totais R$:",
-        "Quadra" : "",
-        "Lote" : "",
-        "Tributo" : "", 
-        "Ref" : "",
-        "Parcela" : "",
-        "Valor Tributo" : total_valor,
-        "Alíquota" : "",
-        "Juros"  : total_juros,
-        "Multa" : total_multa, 
-        "Correção" : total_correcao, 
-        "Descontos" : total_descontos,
-        "Total Divida" : total_divida, 
-        "Vencimento" : "", 
-        "Empresa" : "", 
-        "Cod. Empresa" : "",
-        "Empreendimento" : "",
-        "Cod. Empreendimento" : "",
-        "Unidade" : "",
-        "Disponibilidade" : "",
-        "Contrato" : "",
-        "Titulo" : "", 
-        "Cliente" : "",
-        "Cidade" : "",
-        "Área Priv." : "",
-        "Área Com." : "",
-        "Bairro" : ""
-    }
-    resultados_df = pd.DataFrame([resultados])
-    df_final = pd.concat([df_final, resultados_df], ignore_index=True)
-    
-    total_divida_desconhecidas = df_dividas_desconhecidas["Total Divida"].sum()
-    total_multa_desconhecidas = df_dividas_desconhecidas["Multa"].sum()
-    total_juros_desconhecidas = df_dividas_desconhecidas["Juros"].sum()
-    total_valor_deconhecidos = df_dividas_desconhecidas["Valor Tributo"].sum()
-    total_correcao_desconhecidas = df_dividas_desconhecidas["Correção"].sum()
-    total_descontos_desconhecidas = df_dividas_desconhecidas["Descontos"].sum()
-    
-    resultados_desconhecidos = {
-        "Observação" : "", 
-        "Inscrição": "Totais R$:",
-        "Quadra" : "",
-        "Lote" : "",
-        "Tributo" : "", 
-        "Ref" : "",
-        "Parcela" : "",
-        "Valor Tributo" : total_valor_deconhecidos,
-        "Alíquota" : "",
-        "Juros"  : total_juros_desconhecidas,
-        "Multa" : total_multa_desconhecidas, 
-        "Correção" : total_correcao_desconhecidas, 
-        "Descontos" : total_descontos_desconhecidas,
-        "Total Divida" : total_divida_desconhecidas, 
-        "Vencimento" : "", 
-        "Empresa" : "", 
-        "Cod. Empresa" : "",
-        "Empreendimento" : "",
-        "Cod. Empreendimento" : "",
-        "Unidade" : "",
-        "Disponibilidade" : "",
-        "Contrato" : "",
-        "Titulo" : "", 
-        "Cliente" : "",
-        "Cidade" : "",
-        "Área Priv." : "",
-        "Área Com." : "",
-        "Bairro" : ""
-    }
-    resultados_desconhecidos_df = pd.DataFrame([resultados_desconhecidos])
-    df_dividas_desconhecidas = pd.concat([df_dividas_desconhecidas, resultados_desconhecidos_df], ignore_index=True)
+        resultados_dividas_desconhecidas = {
+            "Inscrição": "Totais R$:",
+            "Quadra" : "",
+            "Lote" : "",
+            "Tributo" : "", 
+            "Ref" : "",
+            "Parcela" : "",
+            "Valor Tributo" : total_valor_deconhecidos,
+            "Alíquota" : "",
+            "Juros"  : total_juros_desconhecidas,
+            "Multa" : total_multa_desconhecidas, 
+            "Correção" : total_correcao_desconhecidas, 
+            "Descontos" : total_descontos_desconhecidas,
+            "Total Divida" : total_divida_desconhecidas, 
+            "Vencimento" : "", 
+            "Bairro" : ""
+        }
+    resultados_dividas_desconhecidas = pd.DataFrame([resultados_dividas_desconhecidas])
+    df_dividas_desconhecidas = pd.concat([df_dividas_desconhecidas, resultados_dividas_desconhecidas], ignore_index=True)
     
     return df_final, df_dividas_desconhecidas
 
