@@ -38,7 +38,7 @@ def processamento_dividas(pdf_path, CSV):
         for num_pagina in range(num_paginas):
             pagina = reader_pdf.pages[num_pagina]
             text = pagina.extract_text()
-            print(text)
+            # print(text)
 
             text = re.sub(r"\s\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"\s\d\d\sPágina.*$", "\n", text, flags=re.MULTILINE)
@@ -58,6 +58,8 @@ def processamento_dividas(pdf_path, CSV):
             text = re.sub(r"Rua\sItarumã,.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r",\sCIDADE:(.+?)\nPE", "\nPE", text, flags=re.MULTILINE)
             text = re.sub(r",\sJATAÍ:(.+?)\nPE", "\nPE", text, flags=re.MULTILINE)
+            text = re.sub(r"\n(.+?)BAIRRO:", "", text, flags=re.MULTILINE)
+            text = re.sub(r"RUA(.+?)\n", "", text, flags=re.MULTILINE)
             text = re.sub(
                 r"\b(TX)\s+(EXP)\s+(ALV)\b", r"\1\2\3", text, flags=re.MULTILINE
             )
@@ -66,6 +68,7 @@ def processamento_dividas(pdf_path, CSV):
             text = re.sub(r"^CORRETAGEM.*$", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"QD\.\:", "QD.", text, flags=re.MULTILINE)
             text = re.sub(r"LT\.\:", "LT.", text, flags=re.MULTILINE)
+            text = re.sub(r"\n(.+?)Página", "\n", text, flags=re.MULTILINE)
             text = re.sub(r"ADC:(.+?)\n\n", "\n", text, flags=re.DOTALL)
             text = re.sub(r"\n+", "\n", text)
             text = re.sub(
@@ -80,7 +83,7 @@ def processamento_dividas(pdf_path, CSV):
             ocorrencias_dividas = correspondencia_data.findall(text)
 
             for ocorrencia_divida in ocorrencias_dividas:
-
+                
                 dividas = []
 
                 padrao_inscricao_cci = re.compile(r"Inscrição:\s(\d+)\sCCI:", re.DOTALL)
@@ -101,7 +104,7 @@ def processamento_dividas(pdf_path, CSV):
                 else:
                     local = None
 
-                padrao_quadra = re.compile(r"QD.(.+?),", re.DOTALL)
+                padrao_quadra = re.compile(r"Qd.:\s(.+?),", re.DOTALL)
                 correspondencia_quadra = padrao_quadra.search(ocorrencia_divida)
 
                 if correspondencia_quadra:
@@ -109,7 +112,7 @@ def processamento_dividas(pdf_path, CSV):
                 else:
                     quadra = None
 
-                padrao_lote = re.compile(r"LT.(.+?),", re.DOTALL)
+                padrao_lote = re.compile(r"Lt.:\s(.+?),", re.DOTALL)
                 correspondencia_lote = padrao_lote.search(ocorrencia_divida)
 
                 if correspondencia_lote:
@@ -117,7 +120,7 @@ def processamento_dividas(pdf_path, CSV):
                 else:
                     lote = None
 
-                padrao_bairro = re.compile(r"BAIRRO:\s(.+?)\n", re.DOTALL)
+                padrao_bairro = re.compile(r"CCI:\s(.+?)\n", re.DOTALL)
                 correspondencia_bairro = padrao_bairro.search(ocorrencia_divida)
 
                 if correspondencia_bairro:
@@ -158,14 +161,19 @@ def processamento_dividas(pdf_path, CSV):
                     debito = valores[14]
                     ref = valores[15]
                     desconto = valores[16]
-
+                    
                     valor_tributo = valor_tributo.replace(".", "").replace(",", ".")
                     base = base.replace(".", "").replace(",", ".")
                     juros = juros.replace(".", "").replace(",", ".")
                     multa = multa.replace(".", "").replace(",", ".")
                     total = total.replace(".", "").replace(",", ".")
                     correcao = correcao.replace(".", "").replace(",", ".")
-
+                    
+                    valor_tributo, base, juros, multa, total, correcao, desconto = map(
+                        float,
+                        [valor_tributo, base, juros, multa, total, correcao, desconto]
+                    )
+                    
                     divida = {
                         "Inscrição": inscricao_cci,
                         "Local": local,
@@ -307,6 +315,22 @@ def processamento_dividas(pdf_path, CSV):
         ]
         df_final = df_final[coluns]
         
+        df_final = df_final.rename(columns={
+            "DEOBSERVACAO": "Observação",
+            "NMEMPRESA": "Empresa",
+            "CDEMPRESAVIEW": "Cod. Empresa",
+            "NMEMPREEND": "Empreendimento",
+            "CDEMPREENDVIEW": "Cod. Empreendimento",
+            "NUUNIDADE": "Unidade",
+            "SITUACAO": "Disponibilidade",
+            "NUCONTRATOVIEW": "Contrato",
+            "NUTITULO": "Titulo",
+            "NMCLIENTE": "Cliente",
+            "CIDADE": "Cidade",
+            "QTAREAPRIV": "Área Priv.",
+            "QTAREACOMUM": "Área Com.",
+        })
+        
         order = [
             "Observação", 
             "Inscrição",
@@ -339,22 +363,6 @@ def processamento_dividas(pdf_path, CSV):
         ]
         df_final = df_final.reindex(columns=order)
         df_final = df_final[order]  
-        
-        df_final = df_final.rename(columns={
-            "DEOBSERVACAO": "Observação",
-            "NMEMPRESA": "Empresa",
-            "CDEMPRESAVIEW": "Cod. Empresa",
-            "NMEMPREEND": "Empreendimento",
-            "CDEMPREENDVIEW": "Cod. Empreendimento",
-            "NUUNIDADE": "Unidade",
-            "SITUACAO": "Disponibilidade",
-            "NUCONTRATOVIEW": "Contrato",
-            "NUTITULO": "Titulo",
-            "NMCLIENTE": "Cliente",
-            "CIDADE": "Cidade",
-            "QTAREAPRIV": "Área Priv.",
-            "QTAREACOMUM": "Área Com.",
-        })
         
         total_divida = df_final["Total Divida"].sum()
         total_multa = df_final["Multa"].sum()

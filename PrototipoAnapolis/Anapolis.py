@@ -287,6 +287,22 @@ def processamento_dividas(pdf_path, CSV):
         ]
         df_final = df_final[coluns]
 
+        df_final = df_final.rename(columns={
+            "DEOBSERVACAO": "Observação",
+            "NMEMPRESA": "Empresa",
+            "CDEMPRESAVIEW": "Cod. Empresa",
+            "NMEMPREEND": "Empreendimento",
+            "CDEMPREENDVIEW": "Cod. Empreendimento",
+            "NUUNIDADE": "Unidade",
+            "SITUACAO": "Disponibilidade",
+            "NUCONTRATOVIEW": "Contrato",
+            "NUTITULO": "Titulo",
+            "NMCLIENTE": "Cliente",
+            "CIDADE": "Cidade",
+            "QTAREAPRIV": "Área Priv.",
+            "QTAREACOMUM": "Área Com.",
+        })
+        
         order = [
             "Observação", 
             "Inscrição",
@@ -319,22 +335,6 @@ def processamento_dividas(pdf_path, CSV):
         ]
         df_final = df_final.reindex(columns=order)
         df_final = df_final[order]
-        
-        df_final = df_final.rename(columns={
-            "DEOBSERVACAO": "Observação",
-            "NMEMPRESA": "Empresa",
-            "CDEMPRESAVIEW": "Cod. Empresa",
-            "NMEMPREEND": "Empreendimento",
-            "CDEMPREENDVIEW": "Cod. Empreendimento",
-            "NUUNIDADE": "Unidade",
-            "SITUACAO": "Disponibilidade",
-            "NUCONTRATOVIEW": "Contrato",
-            "NUTITULO": "Titulo",
-            "NMCLIENTE": "Cliente",
-            "CIDADE": "Cidade",
-            "QTAREAPRIV": "Área Priv.",
-            "QTAREACOMUM": "Área Com.",
-        })
         
         total_divida = df_final["Total Divida"].sum()
         total_multa = df_final["Multa"].sum()
