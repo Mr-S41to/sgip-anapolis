@@ -60,6 +60,7 @@ def processamento_dividas(pdf_path, CSV):
             text = re.sub(r",\sJATAÍ:(.+?)\nPE", "\nPE", text, flags=re.MULTILINE)
             text = re.sub(r"\n(.+?)BAIRRO:", "", text, flags=re.MULTILINE)
             text = re.sub(r"RUA(.+?)\n", "", text, flags=re.MULTILINE)
+            text = re.sub(r"A.\sI.", "A.I.", text, flags=re.MULTILINE)
             text = re.sub(
                 r"\b(TX)\s+(EXP)\s+(ALV)\b", r"\1\2\3", text, flags=re.MULTILINE
             )
