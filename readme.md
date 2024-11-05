@@ -2,7 +2,8 @@
 
 ## Sobre
 
-Esta aplicação tem o objetivo de fazer o processamento de extratos de débitos imobiliários emitidos por contribuintes das prefeituras de Anápolis e Jataí, realizando o cruzamento de dados para sistemas imobiliários por meio de upload via requisição web.
+Esta aplicação tem o objetivo de fazer o processamento de extratos de débitos imobiliários emitidos por contribuintes das prefeituras de Anápolis e Jataí, realizando o cruzamento de dados para emissão de relatórios de débitos
+para sistemas imobiliários por meio de upload via requisição web.
 
 O processamento é feito utilizando a linguagem Python, com a biblioteca de ciência de dados Pandas e comunicação web pelo framework Flask.
 
