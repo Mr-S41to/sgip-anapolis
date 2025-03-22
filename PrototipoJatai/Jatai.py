@@ -510,7 +510,7 @@ def upload_file():
         
         blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
         white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "font_color": "#ffffff", "align": "left"})
         
         for row_num in range(1, len(df_final) + 1):
             if row_num % 2 == 0:
@@ -544,7 +544,7 @@ def upload_file():
 
         blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
         white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "font_color": "#ffffff", "align": "left"})
 
         for row_num in range(1, len(df_dividas_desconhecidas) + 1):
             if row_num % 2 == 0:
