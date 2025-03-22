@@ -7,6 +7,10 @@ para sistemas imobiliários por meio de upload via requisição web.
 
 O processamento é feito utilizando a linguagem Python, com a biblioteca de ciência de dados Pandas e comunicação web pelo framework Flask.
 
+## Obs:
+
+É nescessario ter a pasta ´/Dados´ com o arquivo ´data.csv`compativel para fazer o curzamento de dados.
+
 ## Instruções
 
 1. Certifique-se de ter o Python instalado.
