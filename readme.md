@@ -10,16 +10,12 @@ O processamento é feito utilizando a linguagem Python, com a biblioteca de ciê
 ## Instruções
 
 1. Certifique-se de ter o Python instalado.
-2. Instale o Pandas com o comando:
-    ```sh
-    pip install pandas
-    ```
-3. Abra o terminal em cada app (Anápolis e Jataí).
-4. Instale as dependências necessárias com o comando:
+2. Abra o terminal em cada app (Anápolis e Jataí).
+3. Instale as dependências necessárias com o comando:
     ```sh
     pip install PyPDF2 pandas flask flask-cors
     ```
-5. Rode as aplicações com o comando:
+4. Rode as aplicações com o comando:
     ```sh
     python nome_do_arquivo.py
     ```
