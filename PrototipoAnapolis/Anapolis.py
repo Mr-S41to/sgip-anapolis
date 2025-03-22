@@ -523,7 +523,7 @@ def upload_file():
     pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(pdf_path)
  
-    CSV = "../../Dados/data.csv"
+    CSV = "data.csv"
     
     df_final, df_iss, df_dividas_nao_identificadas = processamento_dividas(pdf_path, CSV)
     
@@ -546,7 +546,7 @@ def upload_file():
         
         blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
         white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "font_color": "#ffffff", "align": "left"})
 
         for row_num in range(1, len(df_final) + 1):
             if row_num % 2 == 0:
@@ -584,7 +584,7 @@ def upload_file():
 
         blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
         white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "font_color": "#ffffff", "align": "left"})
 
         for row_num in range(1, len(df_iss) + 1):
             if row_num % 2 == 0:
@@ -611,7 +611,7 @@ def upload_file():
 
         blue_format = workbook.add_format({"bg_color": "#C6E2FF", "align": "left"})
         white_format = workbook.add_format({"bg_color": "#FEFEFE", "align": "left"})
-        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "color": "#ffffff", "align": "left"})
+        bold_format = workbook.add_format({"bold": True, "bg_color": "#666666", "font_color": "#ffffff", "align": "left"})
 
         for row_num in range(1, len(df_dividas_nao_identificadas) + 1):
             if row_num % 2 == 0:
