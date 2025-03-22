@@ -9,7 +9,7 @@ O processamento é feito utilizando a linguagem Python, com a biblioteca de ciê
 
 ## Obs:
 
-É nescessario ter a pasta ´/Dados´ com o arquivo ´data.csv`compativel para fazer o curzamento de dados.
+É nescessario ter  o arquivo ´data.csv`compativel para fazer o curzamento de dados em cada pasta, em Anápolis e Jataí.
 
 ## Instruções
 
